@@ -2,10 +2,10 @@
 
 const jwt = require('jsonwebtoken');
 const NhanVienModel = require('../models/Nhanvien.model');
+const DocgiaModel = require('../models/Docgia.model'); // ✅ THÊM IMPORT ĐỘC GIẢ
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// --- 1. MIDDLEWARE BẮT BUỘC ĐĂNG NHẬP (Dùng cho mượn sách) ---
-// Giữ lại hàm protect cũ, nhưng đảm bảo nó luôn yêu cầu token
+// --- 1. MIDDLEWARE BẮT BUỘC ĐĂNG NHẬP ---
 exports.protect = async (req, res, next) => {
     // 1) Lấy token
     let token;
@@ -14,35 +14,50 @@ exports.protect = async (req, res, next) => {
     }
 
     if (!token) {
-        // Ném lỗi 401 nếu KHÔNG có token (Bắt buộc đăng nhập)
+        // Ném lỗi 401 nếu KHÔNG có token
         return next(Object.assign(new Error("Bạn chưa đăng nhập! Vui lòng cung cấp Token."), { statusCode: 401 }));
     }
 
-    // 2) Xác thực và kiểm tra người dùng tồn tại
+    // 2) Xác thực Token và Tìm người dùng
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
-        req.user = await NhanVienModel.findById(decoded.id); 
+        const userId = decoded.id; 
 
-        if (!req.user) {
-            throw new Error("Người dùng không còn tồn tại.");
+        // ⚠️ THỬ TÌM KIẾM TRONG CẢ HAI COLLECTIONS SONG SONG
+        const [nhanVienUser, docGiaUser] = await Promise.all([
+            NhanVienModel.findById(userId),
+            DocgiaModel.findById(userId),
+        ]);
+        
+        // 1. Xác định người dùng hợp lệ
+        const currentUser = nhanVienUser || docGiaUser;
+
+        if (!currentUser) {
+            // Nếu không tìm thấy trong cả 2 Collection
+            throw new Error("Người dùng không còn tồn tại."); 
         }
+
+        // 2. Gắn thông tin người dùng vào request
+        // .toObject() giúp chuyển từ Mongoose Document sang object JS thuần túy
+        req.user = currentUser.toObject(); 
+        
+        // 3. Gắn loại tài khoản (quan trọng cho phân quyền)
+        req.user.Chucvu = nhanVienUser ? currentUser.Chucvu : 'Độc giả'; 
+        
         next();
     } catch (error) {
-        // ✅ THÊM LOGIC KIỂM TRA LỖI JWT TẠI ĐÂY
+        // Xử lý lỗi JWT (Hết hạn/Sai chữ ký)
         if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
-             // Nếu token bị lỗi cú pháp hoặc đã hết hạn, đặt statusCode = 401
              error.statusCode = 401; 
              error.message = "Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.";
         } else {
-             // Lỗi khác (ví dụ: người dùng bị xóa khỏi DB)
              error.statusCode = error.statusCode || 401; 
         }
-        next(error); // Chuyển lỗi 401 tới errorHandler
+        next(error);
     }
 };
 
-// --- 2. MIDDLEWARE XEM/DUYỆT TÙY CHỌN (Dùng cho đọc giả) ---
-// Middleware này sẽ cố gắng xác định người dùng nếu có token, nếu không có thì vẫn cho qua
+// --- 2. MIDDLEWARE XEM/DUYỆT TÙY CHỌN (Không bắt buộc Token) ---
 exports.optionalProtect = async (req, res, next) => {
     let token;
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
@@ -50,20 +65,28 @@ exports.optionalProtect = async (req, res, next) => {
     }
 
     if (token) {
-        // Nếu có token, cố gắng xác thực
         try {
             const decoded = jwt.verify(token, JWT_SECRET);
-            req.user = await NhanVienModel.findById(decoded.id); 
+            const [nhanVienUser, docGiaUser] = await Promise.all([
+                NhanVienModel.findById(decoded.id),
+                DocgiaModel.findById(decoded.id),
+            ]);
+            
+            const currentUser = nhanVienUser || docGiaUser;
+            
+            if (currentUser) {
+                req.user = currentUser.toObject();
+                req.user.Chucvu = nhanVienUser ? currentUser.Chucvu : 'Độc giả';
+            }
         } catch (error) {
             // Token bị lỗi/hết hạn, nhưng vẫn cho phép tiếp tục (người dùng ẩn danh)
             req.user = null;
         }
     }
-    // Dù có hay không có user, vẫn cho phép tiếp tục
     next(); 
 };
 
-// --- 3. MIDDLEWARE PHÂN QUYỀN (Không đổi) ---
+// --- 3. MIDDLEWARE PHÂN QUYỀN ---
 exports.restrictTo = (...chucVu) => {
     return (req, res, next) => {
         // Kiểm tra xem req.user có tồn tại không và chức vụ có hợp lệ không

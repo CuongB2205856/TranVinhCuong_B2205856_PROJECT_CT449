@@ -5,6 +5,7 @@ const router = express.Router();
 const nhanvienController = require('../controllers/Nhanvien.controller');
 // const authMiddleware = require('../middleware/auth'); // Middleware xác thực/phân quyền (nếu có)
 
+router.post('/login', nhanvienController.login); // Route đăng nhập nhân viên
 // Quản lý Nhân viên (Cần thêm middleware kiểm tra quyền sau)
 router.route('/')
     .get(nhanvienController.getAllNhanVien) // Lấy danh sách NV

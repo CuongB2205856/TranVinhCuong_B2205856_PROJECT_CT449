@@ -11,7 +11,15 @@ exports.getAllSach = async (req, res, next) => {
         next(error);
     }
 };
-
+exports.getAllSachAdmin = async (req, res, next) => { 
+    try {
+        // Giả định hàm Service này tồn tại và trả về tất cả sách
+        const allSach = await sachService.getAllSachAdmin(); 
+        res.status(200).json(allSach);
+    } catch (error) {
+        next(error);
+    }
+};
 // [GET] /api/sach/:id: Lấy sách theo ID
 exports.getSachById = async (req, res, next) => {
     try {

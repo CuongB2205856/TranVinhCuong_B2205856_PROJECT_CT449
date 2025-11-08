@@ -12,6 +12,16 @@ class BookService {
       throw error;
     }
   }
+  async getAllBooksAdmin() {
+        try {
+            // Backend cần endpoint mới: GET /api/sach/all
+            const response = await api.get('/api/sach/all'); 
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching ALL books for Admin:", error);
+            throw error;
+        }
+    }
   async getBookById(id) {
     try {
       const response = await api.get(`/api/sach/${id}`);

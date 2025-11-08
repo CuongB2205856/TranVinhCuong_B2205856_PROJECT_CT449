@@ -1,6 +1,6 @@
 <template>
     <v-app>
-        <Header /> 
+        <Header v-if="!isAdminRoute" /> 
 
         <v-main>
             <router-view />
@@ -20,6 +20,12 @@ export default {
     components: {
         Header,
         Footer,
+    },
+    computed: {
+        isAdminRoute() {
+            // Trả về true nếu đường dẫn bắt đầu bằng /admin
+            return this.$route.path.startsWith('/admin');
+        }
     }
 };
 </script>

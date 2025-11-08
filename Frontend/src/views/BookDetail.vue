@@ -80,6 +80,7 @@
 
 <script>
 import BookService from "@/services/book.service";
+import muonsachService from "../services/muonsach.service";
 //import { mapState } from 'vuex'; // Nếu bạn dùng Vuex để quản lý Auth
 
 export default {
@@ -118,10 +119,43 @@ export default {
                 this.isLoading = false;
             }
         },
-        handleBorrow() {
-            // Logic Mượn sách: Gọi API POST /api/muonsach
-            alert(`Yêu cầu mượn sách: ${this.book.TenSach} đã được gửi.`);
-            // TODO: Triển khai hàm gọi API mượn sách ở đây
+        async handleBorrow() {
+            if (!this.isAuthenticated) {
+                this.error = "Vui lòng đăng nhập để thực hiện giao dịch mượn sách.";
+                // Chuyển hướng người dùng đến trang login
+                this.$router.push('/login'); 
+                return;
+            }
+
+            // Lấy MaDocGia từ localStorage (Đã được lưu khi đăng nhập)
+            const userData = JSON.parse(localStorage.getItem('user'));
+            const maDocGia = userData ? userData._id : null;
+            
+            if (!maDocGia) {
+                this.error = "Lỗi xác thực người dùng. Vui lòng đăng nhập lại.";
+                return;
+            }
+
+            this.isLoading = true;
+            this.error = null;
+            try {
+                // 1. GỌI SERVICE TẠO PHIẾU MƯỢN
+                const result = await muonsachService.borrowBook(this.book._id, maDocGia);
+                
+                // 2. THÔNG BÁO THÀNH CÔNG VÀ CẬP NHẬT TỒN KHO
+                alert(`✅ Mượn sách thành công! Phiếu mượn: ${result.data._id}`);
+                
+                // Cập nhật lại chi tiết sách để hiển thị số lượng tồn kho mới
+                await this.fetchBookDetails(); 
+
+            } catch (error) {
+                // Xử lý lỗi từ Backend (400 - Hết sách, 404 - Sách/Độc giả không tồn tại, 500 - Lỗi Transaction)
+                const errorMessage = error.response?.data?.message || "Lỗi hệ thống khi mượn sách.";
+                this.error = `Thất bại: ${errorMessage}`;
+                console.error("Lỗi giao dịch mượn:", error);
+            } finally {
+                this.isLoading = false;
+            }
         },
         formatCurrency(value) {
             // Hàm định dạng tiền tệ đơn giản

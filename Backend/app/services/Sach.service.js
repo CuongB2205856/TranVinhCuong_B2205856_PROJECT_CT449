@@ -20,7 +20,9 @@ class sachService {
     async getAllSach(filter = {}) {
         return SachModel.find({ SoQuyen: { $gt: 0 } }); 
     }
-
+    async getAllSachAdmin() {
+        return SachModel.find(); // Trả về tất cả mà không lọc
+    }
     // [READ] Lấy sách theo Mã Sách (ID)
     async getSachById(id) {
         const sach = await SachModel.findById(id);

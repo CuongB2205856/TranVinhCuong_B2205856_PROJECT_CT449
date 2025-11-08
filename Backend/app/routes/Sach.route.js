@@ -1,24 +1,62 @@
-// backend/app/routes/Sach.route.js
+// backend/app/routes/Sach.route.js (ĐÃ SỬA VÀ TỐI ƯU)
 
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const sachController = require('../controllers/Sach.controller'); // Import Controller
-const authMiddleware = require('../middlewares/auth'); // Middleware xác thực
+const sachController = require("../controllers/Sach.controller"); 
+const authMiddleware = require("../middlewares/auth"); 
 
-router.get('/',
-    authMiddleware.optionalProtect, // Sử dụng middleware tùy chọn
-    sachController.getAllSach); // Lấy tất cả sách
-router.get('/:id',
-    authMiddleware.optionalProtect, // Sử dụng middleware tùy chọn
-    sachController.getSachById); // Lấy sách theo ID
-router.use(
-    authMiddleware.protect // Bắt buộc đăng nhập cho các route dưới
+// ----------------------------------------------------
+// A. ROUTES CÔNG KHAI VÀ CRUD CHUNG
+// ----------------------------------------------------
+
+// GET /api/sach (Danh sách sách còn hàng)
+router.get(
+  "/",
+  authMiddleware.optionalProtect, 
+  sachController.getAllSach
 );
-// Lấy tất cả sách và Thêm sách mới
-router.route('/:id')
-    .put(authMiddleware.restrictTo('Thủ thư'), sachController.updateSach) 
-    .delete(authMiddleware.restrictTo('Quản lý'), sachController.deleteSach);
+router.get(
+    "/all", // ✅ Tên route con TÁCH BIỆT
+    authMiddleware.protect, // Bắt buộc đăng nhập
+    //authMiddleware.restrictTo('Admin'), // Sửa quyền Admin
+    sachController.getAllSachAdmin
+);
+// GET /api/sach/:id (Chi tiết sách)
+router.get(
+  "/:id",
+  authMiddleware.optionalProtect, 
+  sachController.getSachById
+);
 
-router.post('/', authMiddleware.restrictTo('Thủ thư'), sachController.createSach);
+
+// ----------------------------------------------------
+// B. ROUTES ADMIN (BẢO VỆ & LẤY TẤT CẢ)
+// ----------------------------------------------------
+
+// 1. GET /api/sach/all (Lấy TẤT CẢ sách cho Admin)
+
+
+// 2. POST /api/sach (Tạo sách mới)
+router.post(
+    "/",
+    authMiddleware.protect,
+    authMiddleware.restrictTo("Admin"), // Chỉ Admin tạo được
+    sachController.createSach
+);
+
+// 3. PUT/DELETE /api/sach/:id (Cập nhật/Xóa)
+router.route("/:id")
+  // PUT /api/sach/:id: Cập nhật sách
+  .put(
+    authMiddleware.protect,
+    authMiddleware.restrictTo("Admin"),
+    sachController.updateSach
+  )
+  // DELETE /api/sach/:id: Xóa sách
+  .delete(
+    authMiddleware.protect,
+    authMiddleware.restrictTo("Admin"),
+    sachController.deleteSach
+  );
 
 module.exports = router;
