@@ -1,7 +1,14 @@
-// backend/app/services/Nhanvien.Service.js
-
 const NhanVienModel = require("../models/Nhanvien.model");
+const jwt = require("jsonwebtoken"); // <--- CẦN THÊM IMPORT
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN;
 
+// [THÊM] Hàm tạo JWT Token
+const signToken = (id) => {
+  return jwt.sign({ id }, JWT_SECRET, {
+    expiresIn: JWT_EXPIRES_IN,
+  });
+};
 class NhanVienService {
   // [CREATE] Thêm nhân viên mới
   async createNhanVien(nhanVienData) {
@@ -26,7 +33,7 @@ class NhanVienService {
     // 1. Tìm nhân viên (bắt buộc phải lấy Password)
     const nhanVien = await NhanVienModel.findById(msnv).select("+Password");
 
-    if (!nhanVien) {
+    if (!nhanVien || !nhanVien.Password) {
       throw Object.assign(
         new Error("Mã số nhân viên hoặc mật khẩu không đúng."),
         { statusCode: 401 }
@@ -42,10 +49,11 @@ class NhanVienService {
         { statusCode: 401 }
       );
     }
+    const token = signToken(nhanVien._id); // Tạo token
 
-    // 3. Trả về thông tin nhân viên
     nhanVien.Password = undefined;
-    return nhanVien;
+    // SỬA: Trả về user VÀ token
+    return { user: nhanVien, token };
   }
 }
 

@@ -34,7 +34,7 @@ app.use('/api/docgia', docgiaRoutes);
 app.use('/api/nhanvien', nhanvienRoutes); // Có thể dùng /api/auth cho login
 app.use('/api/nxb', nxbRoutes);
 app.use('/api/sach', sachRoutes); 
-app.use('/api/muonsach', muonsachRoutes); // Đã rút gọn tên route
+app.use('/api/muonsach', muonsachRoutes); // Route dành cho xác thực (login)
 
 // --- 4. Middleware Xử lý Lỗi (Phải đặt cuối cùng) ---
 app.use(notFound);

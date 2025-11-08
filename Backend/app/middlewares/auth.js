@@ -28,8 +28,16 @@ exports.protect = async (req, res, next) => {
         }
         next();
     } catch (error) {
-        error.statusCode = error.statusCode || 401;
-        next(error);
+        // ✅ THÊM LOGIC KIỂM TRA LỖI JWT TẠI ĐÂY
+        if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+             // Nếu token bị lỗi cú pháp hoặc đã hết hạn, đặt statusCode = 401
+             error.statusCode = 401; 
+             error.message = "Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.";
+        } else {
+             // Lỗi khác (ví dụ: người dùng bị xóa khỏi DB)
+             error.statusCode = error.statusCode || 401; 
+        }
+        next(error); // Chuyển lỗi 401 tới errorHandler
     }
 };
 

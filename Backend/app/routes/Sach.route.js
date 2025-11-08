@@ -8,7 +8,9 @@ const authMiddleware = require('../middlewares/auth'); // Middleware xác thực
 router.get('/',
     authMiddleware.optionalProtect, // Sử dụng middleware tùy chọn
     sachController.getAllSach); // Lấy tất cả sách
-
+router.get('/:id',
+    authMiddleware.optionalProtect, // Sử dụng middleware tùy chọn
+    sachController.getSachById); // Lấy sách theo ID
 router.use(
     authMiddleware.protect // Bắt buộc đăng nhập cho các route dưới
 );
