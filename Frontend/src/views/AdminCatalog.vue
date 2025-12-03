@@ -156,7 +156,7 @@
 </template>
 
 <script>
-import BookService from "@/services/Sach.Service";
+import BookService from "@/services/Book.Service";
 
 export default {
   name: "AdminCatalog",

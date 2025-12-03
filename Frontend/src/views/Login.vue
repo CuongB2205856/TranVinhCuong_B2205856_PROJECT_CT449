@@ -65,25 +65,18 @@
 <script>
 import { Form, Field } from "vee-validate";
 import * as yup from "yup";
-import api from "@/services/api.service"; // Sử dụng Axios Instance
+import AuthService from "@/services/Auth.service"; // SỬA IMPORT
 
 export default {
   name: "LoginPage",
-  components: {
-    Form,
-    Field,
-  },
+  components: { Form, Field },
   data() {
     return {
       showPassword: false,
       serverError: "",
-      // Định nghĩa Validation Schema
       schema: yup.object({
         dienthoai: yup.string().required("SĐT không được để trống"),
-        password: yup
-          .string()
-          .required("Mật khẩu không được để trống")
-          .min(3, "Mật khẩu phải ít nhất 3 ký tự"),
+        password: yup.string().required("Mật khẩu không được để trống"),
       }),
     };
   },
@@ -91,41 +84,18 @@ export default {
     async submitLogin(values) {
       this.serverError = "";
       try {
-        // Gọi API Đăng nhập chung: /api/auth/login
-        const res = await api.post("/api/docgia/login", {
-          DienThoai: values.dienthoai, // Gửi MSNV hoặc SĐT
-          Password: values.password, // Key Backend
-        });
-
-        // Destructure dữ liệu trả về: { token, data: { user } }
-        const { token, data } = res.data;
+        // SỬA: Gọi AuthService.loginReader
+        // values.dienthoai map vào tham số phone
+        const { token, data } = await AuthService.loginReader(values.dienthoai, values.password);
+        
         const user = data.user;
-
-        // 1. Lưu thông tin phiên vào Local Storage
         localStorage.setItem("token", token);
         localStorage.setItem("user", JSON.stringify(user));
 
-        this.$router.push("/books"); // Chuyển hướng sau đăng nhập thành công
+        this.$router.push("/books"); 
       } catch (error) {
-        console.error("Lỗi đăng nhập:", error.response?.data || error);
-
-        let errorMessage;
-
-        if (error.code === "ERR_NETWORK" || error.response?.status === 0) {
-          errorMessage =
-            "Không thể kết nối đến máy chủ API (Kết nối bị từ chối).";
-        } else {
-          // Lấy thông báo lỗi từ server (401/400)
-          errorMessage =
-            error.response?.data?.message ||
-            "Đăng nhập thất bại. Vui lòng kiểm tra thông tin.";
-        }
-
-        this.serverError = errorMessage;
-
-        setTimeout(() => {
-          this.serverError = "";
-        }, 4000);
+        console.error("Lỗi đăng nhập:", error);
+        this.serverError = error.response?.data?.message || "Đăng nhập thất bại.";
       }
     },
   },

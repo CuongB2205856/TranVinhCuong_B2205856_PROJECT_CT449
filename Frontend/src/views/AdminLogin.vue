@@ -59,6 +59,7 @@
 import { Form, Field } from "vee-validate";
 import * as yup from "yup";
 import api from "@/services/api.service";
+import AuthService from "@/services/Auth.service";
 
 export default {
   name: "AdminLoginPage",
@@ -77,35 +78,23 @@ export default {
     async submitLogin(values) {
       this.serverError = "";
       try {
-        // ⚠️ GỌI API NHÂN VIÊN/ADMIN
-        const res = await api.post("/api/nhanvien/login", {
-          MSNV: values.msnv, // Key Backend
-          Password: values.password, // Key Backend
-        });
-
-        const { token, data } = res.data;
+        // SỬA: Gọi loginStaff
+        const { token, data } = await AuthService.loginStaff(values.msnv, values.password);
         const user = data.user;
 
-        // 1. Kiểm tra phân quyền trước khi lưu (Chỉ cho phép NV/Admin)
-        if (!user.Chucvu) {
-          this.serverError =
-            "Tài khoản này không có quyền truy cập trang quản trị.";
+        // Backend trả về user, kiểm tra Chucvu (hoặc Position nếu đã đổi trong Model)
+        // Lưu ý: Model Staff giữ nguyên field 'Chucvu'
+        if (!user.Chucvu && !user.Position) {
+          this.serverError = "Không có quyền truy cập.";
           return;
         }
 
-        // 2. Lưu thông tin phiên
         localStorage.setItem("token", token);
         localStorage.setItem("user", JSON.stringify(user));
 
-        // 3. Chuyển hướng ADMIN (Quản lý/Thủ thư)
         this.$router.push("/admin/dashboard");
       } catch (error) {
-        this.serverError =
-          error.response?.data?.message ||
-          "Đăng nhập thất bại. Vui lòng kiểm tra thông tin.";
-        setTimeout(() => {
-          this.serverError = "";
-        }, 4000);
+        this.serverError = error.response?.data?.message || "Đăng nhập thất bại.";
       }
     },
   },

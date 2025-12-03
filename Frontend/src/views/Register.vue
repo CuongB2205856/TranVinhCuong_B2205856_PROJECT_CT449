@@ -120,6 +120,7 @@
 import { Form, Field } from "vee-validate";
 import * as yup from "yup";
 import api from "@/services/api.service"; // Sử dụng Axios Instance
+import AuthService from "@/services/Auth.service";
 
 export default {
   name: "Register",
@@ -151,7 +152,6 @@ export default {
     };
   },
   methods: {
-    // Hàm tạo MaDocGia tự động (sử dụng thời gian và 4 số cuối SĐT)
     generateMaDocGia(dienThoai) {
       const timestampSuffix = Date.now().toString().slice(-4);
       const lastFourDigits = dienThoai.slice(-4);
@@ -161,32 +161,23 @@ export default {
     async submitRegister(values) {
       this.serverError = "";
       try {
-        // 1. Tạo MaDocGia tự động (DGXXXX)
         const maDocGia = this.generateMaDocGia(values.dienThoai);
 
-        // 2. GỌI API ĐĂNG KÝ
-        // Endpoint: POST /api/docgia
-        const response = await api.post("/api/docgia", {
-          // DỮ LIỆU ĐƯỢC MAP THEO BACKEND MODEL
+        // SỬA: Gọi AuthService.registerReader
+        // Backend Model vẫn dùng key tiếng Việt (HoLot, Ten...) nên ta giữ nguyên object này
+        await AuthService.registerReader({
           _id: maDocGia,
           HoLot: values.hoLot,
           Ten: values.ten,
           DienThoai: values.dienThoai,
-          Password: values.password, // Mật khẩu sẽ được hash trong Model
-          Phai: "Khác", // Giá trị mặc định
-          // NgaySinh: new Date().toISOString() // Có thể thêm nếu cần
+          Password: values.password, 
+          Phai: "Khác", 
         });
 
-        alert(
-          `Đăng ký thành công! Mã số Độc giả của bạn là: ${maDocGia}. Vui lòng đăng nhập.`
-        );
+        alert(`Đăng ký thành công! Mã số: ${maDocGia}.`);
         this.$router.push("/login");
       } catch (error) {
-        console.error("Lỗi đăng ký:", error.response?.data);
-        // Xử lý lỗi trùng lặp (E11000) hoặc lỗi validation
-        this.serverError =
-          error.response?.data?.message ||
-          "Đăng ký thất bại. Vui lòng kiểm tra SĐT/dữ liệu.";
+        this.serverError = error.response?.data?.message || "Đăng ký thất bại.";
       }
     },
   },

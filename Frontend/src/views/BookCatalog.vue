@@ -46,8 +46,9 @@
 </template>
 
 <script>
-import BookService from "@/services/Book.service"; // Import Service
-import BookCard from "@/components/BookCard.vue"; // Import Component Card
+// Đổi tên import
+import BookService from "@/services/Book.service"; 
+import BookCard from "@/components/Bookcard.vue";
 
 export default {
     name: 'BookCatalog',
@@ -58,8 +59,8 @@ export default {
             searchQuery: '',
             itemsPerPage: 12,
             currentPage: 1,
-            allBooks: [],      // Lưu trữ toàn bộ sách từ backend
-            filteredBooks: [], // Sách sau khi tìm kiếm/lọc
+            allBooks: [],      
+            filteredBooks: [], 
         };
     },
     computed: {
@@ -75,7 +76,6 @@ export default {
     methods: {
         filterBooks() {
             let filtered = this.allBooks;
-
             if (this.searchQuery) {
                 const query = this.searchQuery.toLowerCase();
                 filtered = filtered.filter(
@@ -84,23 +84,19 @@ export default {
                         book.TacGia.toLowerCase().includes(query)
                 );
             }
-            
             this.filteredBooks = filtered;
-            this.currentPage = 1; // Reset về trang đầu tiên khi lọc
+            this.currentPage = 1; 
         },
         
         async fetchBooks() {
             this.isLoading = true;
             try {
-                // Gọi service để lấy sách từ API /api/sach
-                const data = await BookService.getAllSach();
-                
+                // SỬA: Gọi hàm getAllBooks() mới
+                const data = await BookService.getAllBooks();
                 this.allBooks = data;
-                this.filteredBooks = data; // Ban đầu, sách lọc = toàn bộ sách
-                
+                this.filteredBooks = data; 
             } catch (error) {
-                console.error("Failed to load books from API:", error);
-                // Có thể hiển thị thông báo lỗi cho người dùng ở đây
+                console.error("Failed to load books:", error);
             } finally {
                 this.isLoading = false;
             }
