@@ -1,13 +1,13 @@
-// backend/app/models/Docgia.model.js
+// backend/app/models/Reader.model.js
 
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
-const DocgiaSchema = new mongoose.Schema({
-    // Sử dụng MaDocGia làm _id (Khóa chính)
+const ReaderSchema = new mongoose.Schema({
+    // --- PHẦN LIÊN QUAN CSDL (GIỮ NGUYÊN) ---
     _id: { 
         type: String, 
-        alias: 'MaDocGia',
+        alias: 'MaDocGia', // Alias để code có thể gọi reader.MaDocGia
     }, 
     HoLot: { 
         type: String, 
@@ -22,7 +22,7 @@ const DocgiaSchema = new mongoose.Schema({
     },
     Phai: { 
         type: String,
-        enum: ['Nam', 'Nữ', 'Khác']
+        enum: ['Nam', 'Nữ', 'Khác'] // Enum giữ nguyên nếu DB lưu tiếng Việt
     },
     DiaChi: { 
         type: String 
@@ -36,12 +36,17 @@ const DocgiaSchema = new mongoose.Schema({
     Password: {
         type: String,
         required: [true, 'Mật khẩu không được để trống.'],
-        select: false, // Không trả về mặc định
+        select: false, 
     },
 }, { 
     versionKey: false,
-    collection: 'Docgia'
-});DocgiaSchema.pre("save", async function (next) {
+    collection: 'Docgia' // ⚠️ QUAN TRỌNG: Phải trỏ đúng collection cũ trong DB
+});
+
+// --- PHẦN LOGIC NODEJS (ĐỔI TÊN BIẾN) ---
+
+// Middleware hash password
+ReaderSchema.pre("save", async function (next) {
     if (!this.isModified("Password")) return next();
     try {
         const salt = await bcrypt.genSalt(10);
@@ -52,10 +57,10 @@ const DocgiaSchema = new mongoose.Schema({
     }
 });
 
-// 🧩 Hàm so sánh mật khẩu khi đăng nhập
-DocgiaSchema.methods.comparePassword = async function (enteredPassword) {
-    // So sánh mật khẩu nhập vào với mật khẩu đã hash trong DB
+// Hàm so sánh password
+ReaderSchema.methods.comparePassword = async function (enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.Password);
 };
 
-module.exports = mongoose.model('Docgia', DocgiaSchema);
+// Export với tên Model là "Reader" nhưng map vào collection "Docgia"
+module.exports = mongoose.model('Reader', ReaderSchema);

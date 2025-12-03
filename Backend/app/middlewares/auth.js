@@ -1,55 +1,51 @@
-// backend/app/middleware/auth.js
+// backend/app/middlewares/auth.js
 
 const jwt = require('jsonwebtoken');
-const NhanVienModel = require('../models/Nhanvien.model');
-const DocgiaModel = require('../models/Docgia.model'); // ✅ THÊM IMPORT ĐỘC GIẢ
+const StaffModel = require('../models/Staff.model');   // <-- Đã đổi tên file
+const ReaderModel = require('../models/Reader.model'); // <-- Đã đổi tên file
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// --- 1. MIDDLEWARE BẮT BUỘC ĐĂNG NHẬP ---
+// --- 1. PROTECT: Require Login ---
 exports.protect = async (req, res, next) => {
-    // 1) Lấy token
     let token;
+    // 1) Get token from header
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         token = req.headers.authorization.split(' ')[1];
     }
 
     if (!token) {
-        // Ném lỗi 401 nếu KHÔNG có token
-        return next(Object.assign(new Error("Bạn chưa đăng nhập! Vui lòng cung cấp Token."), { statusCode: 401 }));
+        return next(Object.assign(new Error("You are not logged in! Please log in to get access."), { statusCode: 401 }));
     }
 
-    // 2) Xác thực Token và Tìm người dùng
+    // 2) Verify Token
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
         const userId = decoded.id; 
 
-        // ⚠️ THỬ TÌM KIẾM TRONG CẢ HAI COLLECTIONS SONG SONG
-        const [nhanVienUser, docGiaUser] = await Promise.all([
-            NhanVienModel.findById(userId),
-            DocgiaModel.findById(userId),
+        // Check both collections (Staff & Reader)
+        const [staffUser, readerUser] = await Promise.all([
+            StaffModel.findById(userId),
+            ReaderModel.findById(userId),
         ]);
         
-        // 1. Xác định người dùng hợp lệ
-        const currentUser = nhanVienUser || docGiaUser;
+        const currentUser = staffUser || readerUser;
 
         if (!currentUser) {
-            // Nếu không tìm thấy trong cả 2 Collection
-            throw new Error("Người dùng không còn tồn tại."); 
+            throw new Error("The user belonging to this token does no longer exist."); 
         }
 
-        // 2. Gắn thông tin người dùng vào request
-        // .toObject() giúp chuyển từ Mongoose Document sang object JS thuần túy
+        // Grant access
         req.user = currentUser.toObject(); 
         
-        // 3. Gắn loại tài khoản (quan trọng cho phân quyền)
-        req.user.Chucvu = nhanVienUser ? currentUser.Chucvu : 'Độc giả'; 
+        // Determine Role (Position)
+        // Lưu ý: Staff vẫn giữ field 'Chucvu' (tiếng Việt) trong DB
+        req.user.Position = staffUser ? currentUser.Chucvu : 'Reader'; 
         
         next();
     } catch (error) {
-        // Xử lý lỗi JWT (Hết hạn/Sai chữ ký)
         if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
              error.statusCode = 401; 
-             error.message = "Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.";
+             error.message = "Session expired or invalid token. Please log in again.";
         } else {
              error.statusCode = error.statusCode || 401; 
         }
@@ -57,7 +53,7 @@ exports.protect = async (req, res, next) => {
     }
 };
 
-// --- 2. MIDDLEWARE XEM/DUYỆT TÙY CHỌN (Không bắt buộc Token) ---
+// --- 2. OPTIONAL PROTECT: Identify user if logged in, else continue as guest ---
 exports.optionalProtect = async (req, res, next) => {
     let token;
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
@@ -67,32 +63,33 @@ exports.optionalProtect = async (req, res, next) => {
     if (token) {
         try {
             const decoded = jwt.verify(token, JWT_SECRET);
-            const [nhanVienUser, docGiaUser] = await Promise.all([
-                NhanVienModel.findById(decoded.id),
-                DocgiaModel.findById(decoded.id),
+            const [staffUser, readerUser] = await Promise.all([
+                StaffModel.findById(decoded.id),
+                ReaderModel.findById(decoded.id),
             ]);
             
-            const currentUser = nhanVienUser || docGiaUser;
+            const currentUser = staffUser || readerUser;
             
             if (currentUser) {
                 req.user = currentUser.toObject();
-                req.user.Chucvu = nhanVienUser ? currentUser.Chucvu : 'Độc giả';
+                req.user.Position = staffUser ? currentUser.Chucvu : 'Reader';
             }
         } catch (error) {
-            // Token bị lỗi/hết hạn, nhưng vẫn cho phép tiếp tục (người dùng ẩn danh)
+            // Ignore invalid token, treat as guest
             req.user = null;
         }
     }
     next(); 
 };
 
-// --- 3. MIDDLEWARE PHÂN QUYỀN ---
-exports.restrictTo = (...chucVu) => {
+// --- 3. RESTRICT TO: Role-based authorization ---
+exports.restrictTo = (...positions) => {
     return (req, res, next) => {
-        // Kiểm tra xem req.user có tồn tại không và chức vụ có hợp lệ không
-        if (!req.user || !chucVu.includes(req.user.Chucvu)) {
+        // positions: danh sách các chức vụ được phép (ví dụ: 'Admin', 'Thủ thư')
+        // req.user.Position: chức vụ hiện tại của user
+        if (!req.user || !positions.includes(req.user.Position)) {
             return next(
-                Object.assign(new Error('Bạn không có quyền thực hiện thao tác này.'), { statusCode: 403 })
+                Object.assign(new Error('You do not have permission to perform this action.'), { statusCode: 403 })
             );
         }
         next();

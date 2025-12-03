@@ -1,8 +1,8 @@
-// backend/app/controllers/Nhanvien.controller.js
+// backend/app/controllers/Staff.controller.js
 
-const nhanvienService = require("../services/Nhanvien.service");
+const StaffService = require("../services/Staff.service");
 
-// [POST] /api/nhanvien/login: Đăng nhập
+// [POST] /api/Staff/login: Đăng nhập
 exports.login = async (req, res, next) => {
   try {
     const { MSNV, Password } = req.body;
@@ -14,7 +14,7 @@ exports.login = async (req, res, next) => {
     }
 
     // Service trả về { user, token }
-    const { user, token } = await nhanvienService.checkLogin(MSNV, Password);
+    const { user, token } = await StaffService.checkLogin(MSNV, Password);
 
     // SỬA: Trả về cấu trúc thành công của REST API
     res.status(200).json({
@@ -27,25 +27,25 @@ exports.login = async (req, res, next) => {
   }
 };
 
-// [POST] /api/nhanvien: Thêm nhân viên mới
-exports.createNhanVien = async (req, res, next) => {
+// [POST] /api/Staff: Thêm nhân viên mới
+exports.createStaff = async (req, res, next) => {
   try {
-    const newNhanVien = await nhanvienService.createNhanVien(req.body);
+    const newStaff = await StaffService.createStaff(req.body);
     // Loại bỏ Password trước khi gửi response
-    newNhanVien.Password = undefined;
+    newStaff.Password = undefined;
     res
       .status(201)
-      .json({ message: "Thêm nhân viên thành công.", data: newNhanVien });
+      .json({ message: "Thêm nhân viên thành công.", data: newStaff });
   } catch (error) {
     next(error);
   }
 };
 
-// [GET] /api/nhanvien: Lấy danh sách nhân viên
-exports.getAllNhanVien = async (req, res, next) => {
+// [GET] /api/Staff: Lấy danh sách nhân viên
+exports.getAllStaff = async (req, res, next) => {
   try {
-    const nhanVienList = await nhanvienService.getAllNhanVien();
-    res.status(200).json(nhanVienList);
+    const StaffList = await StaffService.getAllStaff();
+    res.status(200).json(StaffList);
   } catch (error) {
     next(error);
   }

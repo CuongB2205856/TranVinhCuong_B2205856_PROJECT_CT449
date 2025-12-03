@@ -1,9 +1,9 @@
-// backend/app/models/Nhaxuatban.model.js
+// backend/app/models/Publisher.model.js
 
 const mongoose = require('mongoose');
 
-const NhaXuatBanSchema = new mongoose.Schema({
-    // Sử dụng MaNXB làm _id (Khóa chính)
+const PublisherSchema = new mongoose.Schema({
+    // --- PHẦN LIÊN QUAN CSDL (GIỮ NGUYÊN) ---
     _id: { 
         type: String, 
         alias: 'MaNXB', 
@@ -18,7 +18,8 @@ const NhaXuatBanSchema = new mongoose.Schema({
     }
 }, { 
     versionKey: false,
-    collection: 'NhaXuatBan'
+    collection: 'NhaXuatBan' // ⚠️ Collection cũ
 });
 
-module.exports = mongoose.model('NhaXuatBan', NhaXuatBanSchema); // Tên Model là 'NhaXuatBan'
+// Export Model tên "Publisher"
+module.exports = mongoose.model('Publisher', PublisherSchema);

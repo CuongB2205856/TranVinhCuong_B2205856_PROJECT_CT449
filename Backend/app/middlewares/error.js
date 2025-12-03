@@ -1,15 +1,20 @@
+// backend/app/middlewares/error.js
+
 const errorHandler = (err, req, res, next) => {
     const statusCode = err.statusCode || 500; 
     
+    // Log lỗi ra console để debug (nếu cần)
+    // console.error(err);
+
     res.status(statusCode).json({
         success: false,
-        message: err.message || "Đã xảy ra lỗi trên Server.",
+        message: err.message || "Internal Server Error.",
     });
 };
 
 const notFound = (req, res, next) => {
-    const error = new Error(`Không tìm thấy - ${req.originalUrl}`);
-    error.statusCode = 404; // Gán statusCode để errorHandler bắt
+    const error = new Error(`Not Found - ${req.originalUrl}`);
+    error.statusCode = 404; 
     next(error); 
 };
 
