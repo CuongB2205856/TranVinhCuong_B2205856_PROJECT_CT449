@@ -1,6 +1,8 @@
 // backend/app/services/Staff.service.js
 
 const Staff = require("../models/Staff.model");
+const Book = require("../models/Book.model");          
+const Borrowing = require("../models/Borrowing.model");
 const jwt = require("jsonwebtoken");
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN;
@@ -56,6 +58,49 @@ class StaffService {
 
     staff.Password = undefined;
     return { user: staff, token };
+  }async getSystemStats() {
+    // 1. Thống kê Sách
+    const totalBooks = await Book.countDocuments(); // Tổng số đầu sách (Titles)
+    
+    // Tính tổng giá trị kho sách hiện tại (Số quyển * Đơn giá)
+    const totalValueResult = await Book.aggregate([
+        { 
+            $group: { 
+                _id: null, 
+                total: { $sum: { $multiply: ["$DonGia", "$SoQuyen"] } } 
+            } 
+        }
+    ]);
+    const totalValue = totalValueResult.length > 0 ? totalValueResult[0].total : 0;
+
+    // 2. Thống kê Mượn Trả
+    const borrowingStats = await Borrowing.aggregate([
+        {
+            $group: {
+                _id: "$TrangThai",
+                count: { $sum: 1 }
+            }
+        }
+    ]);
+
+    // Chuyển mảng thành object cho dễ dùng
+    const statsMap = borrowingStats.reduce((acc, curr) => {
+        acc[curr._id] = curr.count;
+        return acc;
+    }, {});
+
+    return {
+        books: {
+            totalTitles: totalBooks,
+            totalValue: totalValue
+        },
+        borrowing: {
+            dang_muon: statsMap['dang_muon'] || 0,     // Sách đang mượn (Chưa trả)
+            da_tra: statsMap['da_tra'] || 0,           // Sách đã trả
+            cho_xac_nhan: statsMap['cho_xac_nhan'] || 0,
+            da_tu_choi: statsMap['da_tu_choi'] || 0
+        }
+    };
   }
 }
 

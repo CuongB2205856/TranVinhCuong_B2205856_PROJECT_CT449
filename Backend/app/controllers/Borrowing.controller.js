@@ -1,41 +1,50 @@
 // backend/app/controllers/Borrowing.controller.js
+const BorrowingService = require('../services/Borrowing.service');
 
-const BorrowingService = require('../services/Borrowing.service'); // Nhớ đổi tên file Service
-
-// [GET] /api/borrowings: Get active borrowings
-exports.getActiveBorrowings = async (req, res, next) => {
+// Lấy danh sách phiếu
+exports.getAllBorrowings = async (req, res, next) => {
     try {
-        const activeList = await BorrowingService.getActiveBorrowings();
-        res.status(200).json(activeList);
-    } catch (error) {
-        next(error);
-    }
+        const list = await BorrowingService.getAllBorrowings();
+        res.send(list);
+    } catch (err) { next(err); }
 };
 
-// [POST] /api/borrowings: Create borrowing record
+// Tạo phiếu
 exports.createBorrowing = async (req, res, next) => {
     try {
-        const newRecord = await BorrowingService.createBorrowing(req.body);
-        res.status(201).json({ 
-            message: "Borrowing record created successfully.", 
-            data: newRecord 
-        });
-    } catch (error) {
-        next(error);
-    }
+        const result = await BorrowingService.createBorrowing(req.body);
+        res.status(201).send({ message: "Gửi yêu cầu thành công! Vui lòng chờ duyệt.", data: result });
+    } catch (err) { next(err); }
 };
 
-// [PUT] /api/borrowings/return/:id: Return book (Update record)
+// Duyệt phiếu
+exports.approveBorrowing = async (req, res, next) => {
+    try {
+        const result = await BorrowingService.approveBorrowing(req.params.id);
+        res.send({ message: "Đã duyệt phiếu mượn.", data: result });
+    } catch (err) { next(err); }
+};
+
+// Trả sách
 exports.returnBook = async (req, res, next) => {
     try {
-        const borrowingId = req.params.id;
-        const updatedRecord = await BorrowingService.returnBook(borrowingId);
-        
-        res.status(200).json({ 
-            message: "Book returned successfully. Inventory updated.", 
-            data: updatedRecord 
-        });
-    } catch (error) {
-        next(error);
-    }
+        const result = await BorrowingService.returnBook(req.params.id);
+        res.send({ message: "Trả sách thành công.", data: result });
+    } catch (err) { next(err); }
+};
+// [GET] Lấy danh sách phiếu theo User (Dựa vào Token)
+exports.getMyBorrowings = async (req, res, next) => {
+    try {
+        // req.user.id lấy từ middleware auth
+        const list = await BorrowingService.getBorrowingsByReader(req.user._id);
+        res.send(list);
+    } catch (err) { next(err); }
+};
+
+// [PUT] Từ chối phiếu
+exports.rejectBorrowing = async (req, res, next) => {
+    try {
+        const result = await BorrowingService.rejectBorrowing(req.params.id);
+        res.send({ message: "Đã từ chối yêu cầu mượn sách.", data: result });
+    } catch (err) { next(err); }
 };

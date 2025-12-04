@@ -49,4 +49,14 @@ exports.getAllStaff = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+
+  
 };
+exports.getStats = async (req, res, next) => {
+    try {
+        const stats = await StaffService.getSystemStats();
+        res.status(200).json(stats);
+    } catch (error) {
+        next(error);
+    }
+  };

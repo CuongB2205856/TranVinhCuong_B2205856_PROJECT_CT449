@@ -22,6 +22,25 @@ class BorrowingService {
     async returnBook(borrowingId) {
         return (await api.put(`/api/borrowings/return/${borrowingId}`)).data;
     }
+    // [GET] Lấy tất cả (Dành cho Admin)
+    async getAllBorrowings() {
+        return (await api.get('/api/borrowings')).data;
+    }
+
+    // [GET] Lấy lịch sử cá nhân (Dành cho User)
+    async getMyBorrowings() {
+        return (await api.get('/api/borrowings/my-history')).data;
+    }
+
+    // [PUT] Duyệt (Giữ nguyên)
+    async approveBorrowing(id) {
+        return (await api.put(`/api/borrowings/approve/${id}`)).data;
+    }
+
+    // [PUT] Từ chối (Thêm mới)
+    async rejectBorrowing(id) {
+        return (await api.put(`/api/borrowings/reject/${id}`)).data;
+    }
 }
 
 export default new BorrowingService();

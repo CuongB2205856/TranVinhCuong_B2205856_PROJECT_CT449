@@ -4,7 +4,6 @@
       <v-col cols="12" md="8">
         <v-card class="rounded-xl shadow-lg pa-6" elevation="10">
           <div class="d-flex flex-column align-center mb-6">
-            
             <div class="position-relative">
               <v-avatar color="primary" size="120" class="elevation-4">
                 <v-img 
@@ -66,7 +65,7 @@
             </v-list-item>
           </v-list>
 
-          <div class="d-flex justify-center gap-4 mt-8">
+          <div class="d-flex justify-center gap-4 mt-8 mb-6">
             <v-btn prepend-icon="mdi-pencil" color="primary" variant="elevated" @click="openEditDialog">
               Cập nhật thông tin
             </v-btn>
@@ -74,6 +73,33 @@
               Đổi mật khẩu
             </v-btn>
           </div>
+
+          <v-divider class="my-6"></v-divider>
+          <h3 class="text-xl font-bold text-gray-800 mb-4 ml-2">
+             <v-icon color="primary" class="mr-2">mdi-history</v-icon>
+             Lịch Sử Mượn Sách
+          </h3>
+
+          <v-data-table
+            :headers="historyHeaders"
+            :items="borrowHistory"
+            :loading="historyLoading"
+            class="elevation-1 border rounded"
+            no-data-text="Bạn chưa mượn cuốn sách nào."
+          >
+            <template v-slot:item.TrangThai="{ item }">
+                <v-chip :color="getStatusColor(item.TrangThai)" size="small" class="text-white font-weight-bold">
+                    {{ getStatusText(item.TrangThai) }}
+                </v-chip>
+            </template>
+            <template v-slot:item.NgayMuon="{ item }">
+                {{ formatDate(item.NgayMuon) }}
+            </template>
+            <template v-slot:item.NgayTra="{ item }">
+                {{ item.NgayTra ? formatDate(item.NgayTra) : '-' }}
+            </template>
+          </v-data-table>
+
         </v-card>
       </v-col>
     </v-row>
@@ -154,17 +180,16 @@
 import { Form, Field } from "vee-validate";
 import * as yup from "yup";
 import axios from "axios"; 
-import ReaderService from "@/services/Reader.service"; //
+import ReaderService from "@/services/Reader.service";
+import BorrowingService from "@/services/Borrowing.service"; // Import Service
 
 export default {
   name: "ProfilePage",
   components: { Form, Field },
   data() {
     return {
-      // Lấy cấu hình từ .env
       CLOUDINARY_NAME: import.meta.env.VITE_CLOUDINARY_NAME,
       CLOUDINARY_PRESET: import.meta.env.VITE_CLOUDINARY_PRESET,
-      // Tên thư mục gốc (PROJECT_CT449)
       CLOUDINARY_FOLDER: import.meta.env.VITE_CLOUDINARY_FOLDER,
 
       dialogEdit: false,
@@ -184,8 +209,18 @@ export default {
         HinhAnh: "", 
       },
       editingData: {},
-
       snackbar: { show: false, message: "", color: "success" },
+
+      // --- Dữ liệu cho Lịch sử mượn ---
+      historyLoading: false,
+      borrowHistory: [],
+      historyHeaders: [
+          { title: "Sách", key: "MaSach.TenSach" },
+          { title: "Ngày mượn", key: "NgayMuon" },
+          { title: "Ngày trả", key: "NgayTra" },
+          { title: "Trạng thái", key: "TrangThai" },
+      ],
+      // -------------------------------
 
       infoSchema: yup.object({
         HoLot: yup.string().required("Họ lót không được để trống"),
@@ -216,6 +251,37 @@ export default {
       }
     },
 
+    // --- Hàm xử lý Lịch sử mượn ---
+    async fetchHistory() {
+        this.historyLoading = true;
+        try {
+            this.borrowHistory = await BorrowingService.getMyBorrowings();
+        } catch (error) {
+            console.error("Lỗi tải lịch sử:", error);
+        } finally {
+            this.historyLoading = false;
+        }
+    },
+    formatDate(dateStr) {
+        if(!dateStr) return "";
+        return new Date(dateStr).toLocaleDateString("vi-VN");
+    },
+    getStatusColor(status) {
+        if(status === 'cho_xac_nhan') return 'orange';
+        if(status === 'dang_muon') return 'blue';
+        if(status === 'da_tra') return 'green';
+        if(status === 'da_tu_choi') return 'red';
+        return 'grey';
+    },
+    getStatusText(status) {
+        if(status === 'cho_xac_nhan') return 'Chờ duyệt';
+        if(status === 'dang_muon') return 'Đang mượn';
+        if(status === 'da_tra') return 'Đã trả';
+        if(status === 'da_tu_choi') return 'Đã bị từ chối';
+        return status;
+    },
+    // -----------------------------
+
     triggerFileInput() {
       this.$refs.fileInput.click();
     },
@@ -239,13 +305,8 @@ export default {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("upload_preset", this.CLOUDINARY_PRESET);
-
-        // --- SỬA LẠI ĐÚNG ---
-        // 1. Chỉ định thư mục qua tham số 'folder'
-        // Kết quả sẽ là: PROJECT_CT449/avatar
         formData.append("folder", `${this.CLOUDINARY_FOLDER}/avatar`);
 
-        // 2. URL upload luôn cố định là /image/upload
         const res = await axios.post(
           `https://api.cloudinary.com/v1_1/${this.CLOUDINARY_NAME}/image/upload`,
           formData
@@ -253,10 +314,8 @@ export default {
 
         const imageUrl = res.data.secure_url;
 
-        // Lưu HinhAnh vào Backend
         await ReaderService.updateReader(this.userData._id, { HinhAnh: imageUrl });
 
-        // Update LocalStorage & UI
         this.userData.HinhAnh = imageUrl;
         const currentUser = JSON.parse(localStorage.getItem("user"));
         const newUser = { ...currentUser, HinhAnh: imageUrl };
@@ -266,7 +325,7 @@ export default {
 
       } catch (error) {
         console.error(error);
-        this.showSnackbar("Lỗi khi upload ảnh. Vui lòng kiểm tra lại cấu hình Cloudinary.", "error");
+        this.showSnackbar("Lỗi khi upload ảnh.", "error");
       } finally {
         this.isUploading = false;
         event.target.value = null;
@@ -335,6 +394,7 @@ export default {
   },
   created() {
     this.loadUser();
+    this.fetchHistory(); // Gọi API lấy lịch sử khi vào trang
   }
 };
 </script>

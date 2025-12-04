@@ -6,7 +6,7 @@
             <router-view />
         </v-main>
         
-        <TheFooter /> 
+        
     </v-app>
 </template>
 

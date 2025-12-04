@@ -9,8 +9,8 @@
       </v-btn>
     </div>
 
-    <v-alert v-if="error" type="error" closable class="mb-4">{{ error }}</v-alert>
-    <v-alert v-if="success" type="success" closable class="mb-4">{{ success }}</v-alert>
+    <v-alert v-if="error" type="error" closable class="mb-4" @click:close="error = null">{{ error }}</v-alert>
+    <v-alert v-if="success" type="success" closable class="mb-4" @click:close="success = null">{{ success }}</v-alert>
 
     <v-data-table
       :headers="headers"
@@ -18,6 +18,7 @@
       :loading="isLoading"
       class="elevation-4 rounded-lg"
       :search="search"
+      item-value="_id" 
     >
       <template v-slot:top>
         <v-text-field
@@ -37,7 +38,7 @@
           width="50"
           height="75"
           cover
-          class="rounded my-2 border"
+          class="rounded my-2 border bg-grey-lighten-2"
         ></v-img>
       </template>
 
@@ -46,13 +47,13 @@
       </template>
 
       <template v-slot:item.SoQuyen="{ item }">
-        <v-chip :color="item.SoQuyen > 0 ? 'green' : 'red'" dark small>
+        <v-chip :color="item.SoQuyen > 0 ? 'green' : 'red'" class="font-weight-bold text-white" size="small">
           {{ item.SoQuyen }}
         </v-chip>
       </template>
 
       <template v-slot:item.NXB="{ item }">
-        {{ item.NXB?.TenNXB }}
+        {{ item.NXB?.TenNXB || 'Chưa cập nhật' }}
       </template>
 
       <template v-slot:item.actions="{ item }">
@@ -66,7 +67,7 @@
     </v-data-table>
 
     <v-dialog v-model="dialog" max-width="900px" persistent>
-      <v-card>
+        <v-card>
         <v-card-title class="bg-primary text-white pa-4">
           <span class="text-h5">{{ formTitle }}</span>
         </v-card-title>
@@ -111,6 +112,7 @@
                       return-object
                       :rules="[rules.requiredObject]"
                       @update:modelValue="onPublisherChange"
+                      no-data-text="Không tìm thấy NXB"
                     ></v-autocomplete>
                   </v-col>
 
@@ -213,12 +215,11 @@
 <script>
 import BookService from "@/services/Book.service";
 import PublisherService from "@/services/Publisher.service"; 
-import axios from "axios"; // Import Axios để gọi Cloudinary
+import axios from "axios"; 
 
 export default {
   name: "AdminCatalog",
   data: () => ({
-    // Cloudinary Config
     CLOUDINARY_NAME: import.meta.env.VITE_CLOUDINARY_NAME,
     CLOUDINARY_PRESET: import.meta.env.VITE_CLOUDINARY_PRESET,
     CLOUDINARY_FOLDER: import.meta.env.VITE_CLOUDINARY_FOLDER,
@@ -227,7 +228,7 @@ export default {
     dialogDelete: false,
     isLoading: false,
     isSaving: false,
-    isUploading: false, // Trạng thái upload ảnh
+    isUploading: false,
     error: null,
     success: null,
     search: "",
@@ -236,13 +237,12 @@ export default {
     publishers: [], 
     selectedPublisher: null, 
     
-    // Xử lý ảnh
     selectedFile: null,
     previewImage: null,
 
     headers: [
       { title: "Mã Sách", key: "_id", align: "start" },
-      { title: "Ảnh Bìa", key: "anh_bia", sortable: false }, // Thêm cột ảnh
+      { title: "Ảnh Bìa", key: "anh_bia", sortable: false },
       { title: "Tên Sách", key: "TenSach" },
       { title: "Tác Giả", key: "TacGia" },
       { title: "Giá", key: "DonGia" },
@@ -259,11 +259,8 @@ export default {
       SoQuyen: 0,
       NamXuatBan: new Date().getFullYear(),
       TacGia: "",
-      anh_bia: "", // Trường ảnh bìa
-      NXB: {
-          MaNXB: "",
-          TenNXB: ""
-      }
+      anh_bia: "",
+      NXB: { MaNXB: "", TenNXB: "" }
     },
     defaultItem: {
       MaSach: "",
@@ -273,10 +270,7 @@ export default {
       NamXuatBan: new Date().getFullYear(),
       TacGia: "",
       anh_bia: "",
-      NXB: {
-          MaNXB: "",
-          TenNXB: ""
-      }
+      NXB: { MaNXB: "", TenNXB: "" }
     },
     itemToDelete: null,
     
@@ -301,19 +295,28 @@ export default {
         return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
     },
 
+    // --- HÀM initData ĐÃ ĐƯỢC SỬA LẠI ---
     async initData() {
         this.isLoading = true;
+        this.error = null;
         try {
-            const [booksData, publishersData] = await Promise.all([
-                BookService.getAllBooksAdmin(),
-                PublisherService.getAllPublishers()
-            ]);
+            // Tách Promise để lỗi NXB không chặn việc hiển thị sách
+            const booksPromise = BookService.getAllBooksAdmin().catch(e => {
+                console.error("Lỗi tải sách:", e);
+                this.error = "Không thể tải danh sách sách.";
+                return [];
+            });
+            
+            const publishersPromise = PublisherService.getAllPublishers().catch(e => {
+                console.error("Lỗi tải NXB (có thể do chưa tạo NXB hoặc lỗi route):", e);
+                // Không set error ở đây để tránh che mất danh sách sách
+                return [];
+            });
+
+            const [booksData, publishersData] = await Promise.all([booksPromise, publishersPromise]);
             
             this.allBooks = booksData;
             this.publishers = publishersData;
-        } catch (err) {
-            this.error = "Lỗi tải dữ liệu. Vui lòng kiểm tra kết nối.";
-            console.error(err);
         } finally {
             this.isLoading = false;
         }
@@ -325,12 +328,10 @@ export default {
         return `S${timestamp}${random}`;
     },
 
-    // --- XỬ LÝ ẢNH ---
     handleFileSelect(event) {
         const file = event.target.files[0];
         if (!file) return;
         
-        // Validate
         if (file.size > 2 * 1024 * 1024) {
             alert("Kích thước ảnh quá lớn (>2MB).");
             return;
@@ -341,7 +342,6 @@ export default {
         }
 
         this.selectedFile = file;
-        // Tạo preview local
         this.previewImage = URL.createObjectURL(file);
     },
 
@@ -353,7 +353,6 @@ export default {
             const formData = new FormData();
             formData.append("file", this.selectedFile);
             formData.append("upload_preset", this.CLOUDINARY_PRESET);
-            // Lưu vào thư mục books
             formData.append("folder", `${this.CLOUDINARY_FOLDER}/books`); 
 
             const res = await axios.post(
@@ -368,14 +367,12 @@ export default {
             this.isUploading = false;
         }
     },
-    // -----------------
 
     openDialog() {
         this.editedIndex = -1;
         this.editedItem = JSON.parse(JSON.stringify(this.defaultItem));
         this.editedItem.MaSach = this.generateBookId();
         
-        // Reset ảnh
         this.selectedFile = null;
         this.previewImage = null;
         this.selectedPublisher = null;
@@ -383,20 +380,25 @@ export default {
     },
 
     editItem(item) {
-      this.editedIndex = this.allBooks.indexOf(item);
+      // SỬA: Tìm index bằng ID thay vì object reference
+      this.editedIndex = this.allBooks.findIndex(b => b._id === item._id);
       this.editedItem = JSON.parse(JSON.stringify(item));
       
-      // Reset ảnh
       this.selectedFile = null;
-      this.previewImage = null; // Sẽ dùng editedItem.anh_bia để hiển thị
+      this.previewImage = null;
 
-      // Xử lý NXB
-      if (item.NXB && item.NXB.MaNXB) {
-          this.selectedPublisher = this.publishers.find(p => p._id === item.NXB.MaNXB) || null;
-          if (!this.selectedPublisher) {
-              this.selectedPublisher = { _id: item.NXB.MaNXB, TenNXB: item.NXB.TenNXB };
+      // SỬA: Logic map NXB an toàn hơn
+      const maNXB = item.NXB?.MaNXB;
+      if (maNXB) {
+          this.selectedPublisher = this.publishers.find(p => p._id === maNXB) || null;
+          // Fallback: Nếu không tìm thấy trong list (VD: NXB bị xóa), vẫn hiện tên cũ
+          if (!this.selectedPublisher && item.NXB.TenNXB) {
+               this.selectedPublisher = { _id: maNXB, TenNXB: item.NXB.TenNXB };
           }
+      } else {
+          this.selectedPublisher = null;
       }
+      
       if(!this.editedItem.MaSach) this.editedItem.MaSach = item._id;
       
       this.dialog = true;
@@ -447,7 +449,6 @@ export default {
     },
 
     async save() {
-      // Validate cơ bản
       if (!this.editedItem.TenSach || !this.editedItem.TacGia || !this.editedItem.NXB.MaNXB) {
           this.error = "Vui lòng điền đầy đủ các trường bắt buộc (*)";
           return;
@@ -455,7 +456,6 @@ export default {
 
       this.isSaving = true;
       try {
-        // 1. Nếu có file mới được chọn, upload lên Cloudinary trước
         if (this.selectedFile) {
             const imageUrl = await this.uploadToCloudinary();
             if (imageUrl) {
@@ -463,14 +463,11 @@ export default {
             }
         }
 
-        // 2. Chuẩn bị payload
         const payload = { ...this.editedItem };
-        
         if (this.editedIndex === -1) {
             payload._id = payload.MaSach;
         }
 
-        // 3. Gọi API lưu vào DB
         if (this.editedIndex > -1) {
           await BookService.updateBook(this.editedItem._id, payload);
           this.success = "Cập nhật sách thành công!";

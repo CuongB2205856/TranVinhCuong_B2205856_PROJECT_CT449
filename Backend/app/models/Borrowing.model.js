@@ -1,36 +1,20 @@
 // backend/app/models/Borrowing.model.js
-
 const mongoose = require("mongoose");
 
 const BorrowingSchema = new mongoose.Schema(
   {
-    // --- PHẦN LIÊN QUAN CSDL (GIỮ NGUYÊN) ---
-    MaDocGia: {
+    MaDocGia: { type: String, ref: "Reader", required: true },
+    MaSach: { type: String, ref: "Book", required: true },
+    NgayMuon: { type: Date, required: true, default: Date.now },
+    NgayTra: { type: Date, default: null },
+    TrangThai: {
       type: String,
-      // ⚠️ LƯU Ý: ref phải trỏ đến tên MODEL mới (Reader) chứ không phải tên Collection cũ
-      ref: "Reader", 
-      required: true
-    },
-    MaSach: {
-      type: String,
-      // ⚠️ LƯU Ý: ref trỏ đến Model "Book"
-      ref: "Book", 
-      required: true
-    },
-    NgayMuon: {
-      type: Date,
-      required: true,
-      default: Date.now,
-    },
-    NgayTra: {
-      type: Date,
-      default: null,
-    },
+      // Thêm 'da_tu_choi' vào enum
+      enum: ["cho_xac_nhan", "dang_muon", "da_tra", "da_tu_choi"], 
+      default: "cho_xac_nhan" 
+    }
   },
-  {
-    versionKey: false,
-    collection: "TheoDoiMuonSach", // ⚠️ Collection cũ
-  }
+  { versionKey: false, collection: "TheoDoiMuonSach" }
 );
 
 module.exports = mongoose.model("Borrowing", BorrowingSchema);

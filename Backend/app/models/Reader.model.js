@@ -43,6 +43,15 @@ const ReaderSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    SoLanViPham: {
+        type: Number,
+        default: 0
+    },
+    TrangThai: {
+        type: String,
+        enum: ['Active', 'Blocked'], // Active: Hoạt động, Blocked: Bị khóa
+        default: 'Active'
+    }
   },
   {
     versionKey: false,
