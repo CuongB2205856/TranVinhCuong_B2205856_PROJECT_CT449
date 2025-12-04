@@ -40,7 +40,11 @@ const BookSchema = new mongoose.Schema({
     NXB: { 
         type: PublisherEmbeddedSchema, 
         required: [true, 'Thông tin NXB không được để trống.'] 
-    }
+    },
+    anh_bia: {
+        type: String,
+        default: "https://res.cloudinary.com/dquwesxem/image/upload/v1764848203/Cover-education-dress-book-read-shelving-tints-and-shades_299485_wh860_ya3gvx.png" // Mặc định rỗng hoặc link ảnh placeholder
+    },
 }, { 
     versionKey: false,
     collection: 'Sach' // ⚠️ Collection cũ

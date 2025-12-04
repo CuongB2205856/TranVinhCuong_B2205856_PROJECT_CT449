@@ -17,7 +17,30 @@
       :items="allBooks"
       :loading="isLoading"
       class="elevation-4 rounded-lg"
+      :search="search"
     >
+      <template v-slot:top>
+        <v-text-field
+          v-model="search"
+          label="Tìm kiếm sách..."
+          prepend-inner-icon="mdi-magnify"
+          variant="outlined"
+          density="compact"
+          class="pa-4"
+          hide-details
+        ></v-text-field>
+      </template>
+
+      <template v-slot:item.anh_bia="{ item }">
+        <v-img
+          :src="item.anh_bia || 'https://placehold.co/100x150?text=No+Image'"
+          width="50"
+          height="75"
+          cover
+          class="rounded my-2 border"
+        ></v-img>
+      </template>
+
       <template v-slot:item.DonGia="{ item }">
         {{ formatCurrency(item.DonGia) }}
       </template>
@@ -42,112 +65,144 @@
       </template>
     </v-data-table>
 
-    <v-dialog v-model="dialog" max-width="700px">
+    <v-dialog v-model="dialog" max-width="900px" persistent>
       <v-card>
-        <v-card-title>
+        <v-card-title class="bg-primary text-white pa-4">
           <span class="text-h5">{{ formTitle }}</span>
         </v-card-title>
 
-        <v-card-text>
+        <v-card-text class="pt-6">
           <v-container>
             <v-row>
-              <v-col cols="12" sm="4">
-                <v-text-field
-                  v-model="editedItem.MaSach"
-                  label="Mã Sách (Tùy chọn)"
-                  variant="outlined"
-                  density="compact"
-                ></v-text-field>
-              </v-col>
-              
-              <v-col cols="12" sm="8">
-                <v-text-field
-                  v-model="editedItem.TenSach"
-                  label="Tên Sách *"
-                  variant="outlined"
-                  density="compact"
-                ></v-text-field>
+              <v-col cols="12" md="8">
+                <v-row>
+                  <v-col cols="12">
+                    <v-text-field
+                      v-model="editedItem.TenSach"
+                      label="Tên Sách *"
+                      variant="outlined"
+                      density="compact"
+                      prepend-inner-icon="mdi-book-open-variant"
+                      :rules="[rules.required]"
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col cols="12" sm="6">
+                    <v-text-field
+                      v-model="editedItem.TacGia"
+                      label="Tác Giả *"
+                      variant="outlined"
+                      density="compact"
+                      prepend-inner-icon="mdi-account-edit"
+                      :rules="[rules.required]"
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col cols="12" sm="6">
+                    <v-autocomplete
+                      v-model="selectedPublisher"
+                      :items="publishers"
+                      item-title="TenNXB"
+                      item-value="_id" 
+                      label="Nhà Xuất Bản *"
+                      variant="outlined"
+                      density="compact"
+                      prepend-inner-icon="mdi-domain"
+                      return-object
+                      :rules="[rules.requiredObject]"
+                      @update:modelValue="onPublisherChange"
+                    ></v-autocomplete>
+                  </v-col>
+
+                  <v-col cols="12" sm="4">
+                    <v-text-field
+                      v-model="editedItem.NamXuatBan"
+                      label="Năm XB"
+                      type="number"
+                      variant="outlined"
+                      density="compact"
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col cols="12" sm="4">
+                    <v-text-field
+                      v-model="editedItem.SoQuyen"
+                      label="Số Quyển *"
+                      type="number"
+                      variant="outlined"
+                      density="compact"
+                      min="0"
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col cols="12" sm="4">
+                    <v-text-field
+                      v-model="editedItem.DonGia"
+                      label="Đơn Giá *"
+                      type="number"
+                      variant="outlined"
+                      density="compact"
+                      suffix="VND"
+                    ></v-text-field>
+                  </v-col>
+                </v-row>
               </v-col>
 
-              <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="editedItem.DonGia"
-                  label="Đơn Giá *"
-                  type="number"
-                  variant="outlined"
-                  density="compact"
-                ></v-text-field>
-              </v-col>
+              <v-col cols="12" md="4" class="text-center">
+                <div class="border rounded-lg pa-4">
+                  <v-label class="mb-2 font-weight-bold">Ảnh Bìa</v-label>
+                  
+                  <v-img
+                    :src="previewImage || editedItem.anh_bia || 'https://placehold.co/300x450?text=No+Image'"
+                    max-height="250"
+                    contain
+                    class="bg-grey-lighten-4 rounded mb-4 mx-auto"
+                    style="border: 1px dashed #ccc;"
+                  ></v-img>
 
-              <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="editedItem.SoQuyen"
-                  label="Số Quyển *"
-                  type="number"
-                  variant="outlined"
-                  density="compact"
-                ></v-text-field>
-              </v-col>
+                  <input
+                    ref="fileInput"
+                    type="file"
+                    accept="image/png, image/jpeg, image/jpg"
+                    class="d-none"
+                    @change="handleFileSelect"
+                  />
 
-              <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="editedItem.NamXuatBan"
-                  label="Năm Xuất Bản"
-                  type="number"
-                  variant="outlined"
-                  density="compact"
-                ></v-text-field>
-              </v-col>
-
-              <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="editedItem.TacGia"
-                  label="Tác Giả"
-                  variant="outlined"
-                  density="compact"
-                ></v-text-field>
-              </v-col>
-              
-              <v-col cols="12">
-                  <span class="text-subtitle-2 font-weight-bold">Thông tin Nhà Xuất Bản</span>
-              </v-col>
-              <v-col cols="12" sm="4">
-                <v-text-field
-                  v-model="editedItem.NXB.MaNXB"
-                  label="Mã NXB *"
-                  variant="outlined"
-                  density="compact"
-                  placeholder="VD: NXB01"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12" sm="8">
-                <v-text-field
-                  v-model="editedItem.NXB.TenNXB"
-                  label="Tên NXB *"
-                  variant="outlined"
-                  density="compact"
-                ></v-text-field>
+                  <v-btn 
+                    color="primary" 
+                    variant="outlined" 
+                    prepend-icon="mdi-camera"
+                    @click="$refs.fileInput.click()"
+                    :loading="isUploading"
+                  >
+                    {{ editedItem.anh_bia || previewImage ? 'Đổi ảnh' : 'Chọn ảnh' }}
+                  </v-btn>
+                  
+                  <div v-if="selectedFile" class="text-caption mt-2 text-green">
+                    Đã chọn: {{ selectedFile.name }}
+                  </div>
+                </div>
               </v-col>
             </v-row>
           </v-container>
         </v-card-text>
 
-        <v-card-actions>
+        <v-card-actions class="pa-4 border-t">
           <v-spacer></v-spacer>
-          <v-btn color="blue-darken-1" variant="text" @click="close">Hủy</v-btn>
-          <v-btn color="blue-darken-1" variant="elevated" @click="save">Lưu</v-btn>
+          <v-btn color="grey-darken-1" variant="text" @click="close">Hủy</v-btn>
+          <v-btn color="primary" variant="elevated" @click="save" :loading="isSaving">Lưu</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
     <v-dialog v-model="dialogDelete" max-width="500px">
       <v-card>
-        <v-card-title class="text-h6">Bạn có chắc chắn muốn xóa sách này?</v-card-title>
+        <v-card-title class="text-h6 pa-4">Xác nhận xóa</v-card-title>
+        <v-card-text>Bạn có chắc chắn muốn xóa cuốn sách <strong>{{ itemToDelete?.TenSach }}</strong> không?</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue-darken-1" variant="text" @click="closeDelete">Hủy</v-btn>
-          <v-btn color="red-darken-1" variant="elevated" @click="deleteItemConfirm">Xóa</v-btn>
-          <v-spacer></v-spacer>
+          <v-btn color="grey" variant="text" @click="closeDelete">Hủy</v-btn>
+          <v-btn color="red" variant="elevated" @click="deleteItemConfirm">Xóa</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -156,34 +211,55 @@
 </template>
 
 <script>
-import BookService from "@/services/Book.Service";
+import BookService from "@/services/Book.service";
+import PublisherService from "@/services/Publisher.service"; 
+import axios from "axios"; // Import Axios để gọi Cloudinary
 
 export default {
   name: "AdminCatalog",
   data: () => ({
+    // Cloudinary Config
+    CLOUDINARY_NAME: import.meta.env.VITE_CLOUDINARY_NAME,
+    CLOUDINARY_PRESET: import.meta.env.VITE_CLOUDINARY_PRESET,
+    CLOUDINARY_FOLDER: import.meta.env.VITE_CLOUDINARY_FOLDER,
+
     dialog: false,
     dialogDelete: false,
-    isLoading: true,
+    isLoading: false,
+    isSaving: false,
+    isUploading: false, // Trạng thái upload ảnh
     error: null,
     success: null,
+    search: "",
+    
     allBooks: [],
+    publishers: [], 
+    selectedPublisher: null, 
+    
+    // Xử lý ảnh
+    selectedFile: null,
+    previewImage: null,
+
     headers: [
       { title: "Mã Sách", key: "_id", align: "start" },
+      { title: "Ảnh Bìa", key: "anh_bia", sortable: false }, // Thêm cột ảnh
       { title: "Tên Sách", key: "TenSach" },
-      { title: "Đơn Giá", key: "DonGia" },
+      { title: "Tác Giả", key: "TacGia" },
+      { title: "Giá", key: "DonGia" },
       { title: "Kho", key: "SoQuyen" },
       { title: "NXB", key: "NXB" },
       { title: "Thao tác", key: "actions", sortable: false },
     ],
+    
     editedIndex: -1,
-    // Cấu trúc mặc định khớp với Model Backend
     editedItem: {
-      MaSach: "", // Dùng cho trường hợp nhập tay _id
+      MaSach: "",
       TenSach: "",
       DonGia: 0,
       SoQuyen: 0,
       NamXuatBan: new Date().getFullYear(),
       TacGia: "",
+      anh_bia: "", // Trường ảnh bìa
       NXB: {
           MaNXB: "",
           TenNXB: ""
@@ -196,22 +272,28 @@ export default {
       SoQuyen: 0,
       NamXuatBan: new Date().getFullYear(),
       TacGia: "",
+      anh_bia: "",
       NXB: {
           MaNXB: "",
           TenNXB: ""
       }
     },
     itemToDelete: null,
+    
+    rules: {
+        required: value => !!value || 'Bắt buộc.',
+        requiredObject: value => !!value || 'Vui lòng chọn một mục.'
+    }
   }),
 
   computed: {
     formTitle() {
       return this.editedIndex === -1 ? "Thêm Sách Mới" : "Cập Nhật Sách";
-    },
+    }
   },
 
   created() {
-    this.fetchAllBooks();
+    this.initData();
   },
 
   methods: {
@@ -219,33 +301,113 @@ export default {
         return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
     },
 
-    async fetchAllBooks() {
-      this.isLoading = true;
-      try {
-        this.allBooks = await BookService.getAllBooksAdmin();
-      } catch (err) {
-        this.error = "Lỗi tải dữ liệu. Bạn có thể cần đăng nhập lại.";
-        console.error(err);
-      } finally {
-        this.isLoading = false;
-      }
+    async initData() {
+        this.isLoading = true;
+        try {
+            const [booksData, publishersData] = await Promise.all([
+                BookService.getAllBooksAdmin(),
+                PublisherService.getAllPublishers()
+            ]);
+            
+            this.allBooks = booksData;
+            this.publishers = publishersData;
+        } catch (err) {
+            this.error = "Lỗi tải dữ liệu. Vui lòng kiểm tra kết nối.";
+            console.error(err);
+        } finally {
+            this.isLoading = false;
+        }
     },
+
+    generateBookId() {
+        const timestamp = Date.now().toString().slice(-6); 
+        const random = Math.floor(Math.random() * 100); 
+        return `S${timestamp}${random}`;
+    },
+
+    // --- XỬ LÝ ẢNH ---
+    handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        // Validate
+        if (file.size > 2 * 1024 * 1024) {
+            alert("Kích thước ảnh quá lớn (>2MB).");
+            return;
+        }
+        if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
+            alert("Chỉ chấp nhận file ảnh (JPG, PNG).");
+            return;
+        }
+
+        this.selectedFile = file;
+        // Tạo preview local
+        this.previewImage = URL.createObjectURL(file);
+    },
+
+    async uploadToCloudinary() {
+        if (!this.selectedFile) return null;
+
+        this.isUploading = true;
+        try {
+            const formData = new FormData();
+            formData.append("file", this.selectedFile);
+            formData.append("upload_preset", this.CLOUDINARY_PRESET);
+            // Lưu vào thư mục books
+            formData.append("folder", `${this.CLOUDINARY_FOLDER}/books`); 
+
+            const res = await axios.post(
+                `https://api.cloudinary.com/v1_1/${this.CLOUDINARY_NAME}/image/upload`,
+                formData
+            );
+            return res.data.secure_url;
+        } catch (error) {
+            console.error("Upload error:", error);
+            throw new Error("Lỗi khi tải ảnh lên Cloudinary.");
+        } finally {
+            this.isUploading = false;
+        }
+    },
+    // -----------------
 
     openDialog() {
         this.editedIndex = -1;
-        // Deep copy để tránh tham chiếu object con (NXB)
         this.editedItem = JSON.parse(JSON.stringify(this.defaultItem));
+        this.editedItem.MaSach = this.generateBookId();
+        
+        // Reset ảnh
+        this.selectedFile = null;
+        this.previewImage = null;
+        this.selectedPublisher = null;
         this.dialog = true;
     },
 
     editItem(item) {
       this.editedIndex = this.allBooks.indexOf(item);
-      // Deep copy item vào editedItem
       this.editedItem = JSON.parse(JSON.stringify(item));
-      // Nếu có _id, gán vào MaSach để hiển thị (tùy chọn)
+      
+      // Reset ảnh
+      this.selectedFile = null;
+      this.previewImage = null; // Sẽ dùng editedItem.anh_bia để hiển thị
+
+      // Xử lý NXB
+      if (item.NXB && item.NXB.MaNXB) {
+          this.selectedPublisher = this.publishers.find(p => p._id === item.NXB.MaNXB) || null;
+          if (!this.selectedPublisher) {
+              this.selectedPublisher = { _id: item.NXB.MaNXB, TenNXB: item.NXB.TenNXB };
+          }
+      }
       if(!this.editedItem.MaSach) this.editedItem.MaSach = item._id;
       
       this.dialog = true;
+    },
+    
+    onPublisherChange(val) {
+        if (val) {
+            this.editedItem.NXB = { MaNXB: val._id, TenNXB: val.TenNXB };
+        } else {
+            this.editedItem.NXB = { MaNXB: "", TenNXB: "" };
+        }
     },
 
     deleteItem(item) {
@@ -257,7 +419,7 @@ export default {
       try {
         await BookService.deleteBook(this.itemToDelete._id);
         this.success = "Đã xóa sách thành công.";
-        this.fetchAllBooks(); // Tải lại danh sách
+        this.initData(); 
       } catch (err) {
         this.error = "Xóa thất bại. Có thể sách đang được mượn.";
       }
@@ -269,6 +431,11 @@ export default {
       this.$nextTick(() => {
         this.editedItem = JSON.parse(JSON.stringify(this.defaultItem));
         this.editedIndex = -1;
+        this.selectedPublisher = null;
+        this.selectedFile = null;
+        this.previewImage = null;
+        this.error = null;
+        this.success = null;
       });
     },
 
@@ -281,38 +448,45 @@ export default {
 
     async save() {
       // Validate cơ bản
-      if (!this.editedItem.TenSach || !this.editedItem.NXB.MaNXB) {
-          this.error = "Vui lòng nhập Tên sách và thông tin NXB.";
-          setTimeout(() => this.error = null, 3000);
+      if (!this.editedItem.TenSach || !this.editedItem.TacGia || !this.editedItem.NXB.MaNXB) {
+          this.error = "Vui lòng điền đầy đủ các trường bắt buộc (*)";
           return;
       }
 
+      this.isSaving = true;
       try {
-        // Chuẩn bị payload
+        // 1. Nếu có file mới được chọn, upload lên Cloudinary trước
+        if (this.selectedFile) {
+            const imageUrl = await this.uploadToCloudinary();
+            if (imageUrl) {
+                this.editedItem.anh_bia = imageUrl;
+            }
+        }
+
+        // 2. Chuẩn bị payload
         const payload = { ...this.editedItem };
-        // Nếu tạo mới và người dùng nhập MaSach, backend dùng nó làm _id
-        if (this.editedIndex === -1 && payload.MaSach) {
+        
+        if (this.editedIndex === -1) {
             payload._id = payload.MaSach;
         }
 
+        // 3. Gọi API lưu vào DB
         if (this.editedIndex > -1) {
-          // --- UPDATE ---
-          // Backend route: PUT /api/sach/:id
           await BookService.updateBook(this.editedItem._id, payload);
-          this.success = "Cập nhật thành công!";
+          this.success = "Cập nhật sách thành công!";
         } else {
-          // --- CREATE ---
-          // Backend route: POST /api/sach
           await BookService.createBook(payload);
           this.success = "Thêm sách mới thành công!";
         }
         
-        this.fetchAllBooks(); // Refresh list
+        await this.initData(); 
         this.close();
 
       } catch (err) {
         console.error(err);
-        this.error = err.response?.data?.message || "Có lỗi xảy ra khi lưu.";
+        this.error = err.message || err.response?.data?.message || "Có lỗi xảy ra khi lưu.";
+      } finally {
+        this.isSaving = false;
       }
     },
   },

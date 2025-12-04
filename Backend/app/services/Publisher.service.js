@@ -32,6 +32,16 @@ class PublisherService {
         return publisher;
     }
 
+    async updatePublisher(id, data) {
+        const updatedPublisher = await Publisher.findByIdAndUpdate(id, data, { new: true });
+        if (!updatedPublisher) {
+            const error = new Error(`Update failed: Publisher not found with ID ${id}`);
+            error.statusCode = 404;
+            throw error;
+        }
+        return updatedPublisher;
+    }
+
     // [DELETE] Delete Publisher
     async deletePublisher(id) {
         // Check constraints: Tìm sách có NXB.MaNXB trùng khớp

@@ -1,5 +1,8 @@
-// src/router/index.js
+// src/routers/index.js
 import { createRouter, createWebHistory } from "vue-router";
+
+// Import các Components
+import HomePage from "../views/Home.vue";
 import BooksPage from "../views/BookCatalog.vue";
 import BookDetail from "../views/BookDetail.vue";
 import Login from "../views/Login.vue";
@@ -7,8 +10,15 @@ import Register from "../views/Register.vue";
 import AdminLogin from "../views/AdminLogin.vue";
 import AdminLayout from "../components/Admin/AdminLayout.vue";
 import AdminCatalog from "../views/AdminCatalog.vue";
+import Profile from "../views/Profile.vue";
+import AdminPublisher from "../views/AdminPublisher.vue"; // Component NXB
 
 const routes = [
+  {
+    path: "/",
+    name: "Home",
+    component: HomePage,
+  },
   {
     path: "/books",
     name: "BooksPage",
@@ -18,7 +28,7 @@ const routes = [
     path: "/books/:id",
     name: "BookDetail",
     component: BookDetail,
-    props: true, // ⚠️ Quan trọng: Cho phép truyền tham số URL (:id) vào props của component
+    props: true,
   },
   {
     path: "/login",
@@ -26,10 +36,23 @@ const routes = [
     component: Login,
   },
   {
-    path: "/register", // Sửa path này nếu bạn đang dùng path /register cho đăng ký độc giả
+    path: "/register",
     name: "Register",
     component: Register,
   },
+  {
+    path: "/profile",
+    name: "Profile",
+    component: Profile,
+    beforeEnter: (to, from, next) => {
+      if (localStorage.getItem("token")) {
+        next();
+      } else {
+        next("/login");
+      }
+    },
+  },
+  // --- ADMIN AREA ---
   {
     path: "/admin/login",
     name: "AdminLogin",
@@ -38,26 +61,33 @@ const routes = [
   {
     path: "/admin",
     name: "AdminArea",
-    component: AdminLayout, // Sử dụng Layout riêng
-    meta: { requiresAuth: true, roles: ['Admin'] },
+    component: AdminLayout,
+    meta: { requiresAuth: true, roles: ["Admin"] },
     children: [
       {
-        path: '', // Đường dẫn rỗng (tức là /admin)
-        redirect: '/admin/login', // Redirect tới trang login Admin
+        path: "",
+        redirect: "/admin/dashboard", // Chuyển hướng mặc định vào dashboard
       },
-      // KHU VỰC BẮT BUỘC ĐĂNG NHẬP SAU KHI LOGIN:
       {
-        path: "dashboard", // /admin/dashboard
+        path: "dashboard",
         name: "AdminDashboard",
         component: AdminCatalog,
-        meta: { requiresAuth: true, roles: ['Admin'] }, // ⬅️ ĐẶT meta: { requiresAuth: true } Ở CÁC ROUTE CON CẦN BẢO VỆ
+        meta: { requiresAuth: true, roles: ["Admin"] },
+      },
+      // --- SỬA LẠI: Đưa route publishers vào trong children ---
+      {
+        path: "publishers", // Khi đó URL sẽ là /admin/publishers
+        name: "AdminPublishers",
+        component: AdminPublisher,
+        meta: { requiresAuth: true, roles: ["Admin"] },
       },
     ],
-  } ,
+  },
 ];
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
 });
+
 export default router;

@@ -50,18 +50,29 @@ class ReaderService {
 
   // [UPDATE] Update reader
   async updateReader(id, updateData) {
-    const updatedReader = await Reader.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true,
-    });
+    // 1. Tìm bản ghi trước
+    const reader = await Reader.findById(id);
 
-    if (!updatedReader) {
+    if (!reader) {
       const error = new Error(`Update failed: Reader not found with ID ${id}`);
       error.statusCode = 404;
       throw error;
     }
+
+    // 2. Cập nhật từng trường dữ liệu
+    Object.keys(updateData).forEach((key) => {
+      // Bỏ qua _id để tránh lỗi
+      if (key !== '_id') {
+        reader[key] = updateData[key];
+      }
+    });
+
+    // 3. Lưu lại -> Kích hoạt middleware pre('save') trong Model để hash password
+    const updatedReader = await reader.save();
+
     return updatedReader;
   }
+  // --------------------------------
 
   // [AUTH] Login
   async checkLogin(phone, password) {

@@ -12,6 +12,15 @@ exports.getAllPublishers = async (req, res, next) => {
     }
 };
 
+exports.getPublisherById = async (req, res, next) => {
+    try {
+        const publisher = await PublisherService.getPublisherById(req.params.id);
+        res.status(200).json(publisher);
+    } catch (error) {
+        next(error);
+    }
+};
+
 // [POST] /api/publishers: Create new publisher
 exports.createPublisher = async (req, res, next) => {
     try {
@@ -19,6 +28,19 @@ exports.createPublisher = async (req, res, next) => {
         res.status(201).json({ 
             message: "Publisher created successfully.", 
             data: newPublisher 
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// [PUT] /api/publishers/:id --- THÊM MỚI ---
+exports.updatePublisher = async (req, res, next) => {
+    try {
+        const updatedPublisher = await PublisherService.updatePublisher(req.params.id, req.body);
+        res.status(200).json({ 
+            message: "Publisher updated successfully.", 
+            data: updatedPublisher 
         });
     } catch (error) {
         next(error);
