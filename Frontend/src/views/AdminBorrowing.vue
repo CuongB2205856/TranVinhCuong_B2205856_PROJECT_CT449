@@ -131,6 +131,8 @@ export default {
           return "Đã trả";
         case "da_tu_choi":
           return "Đã từ chối"; // Text hiển thị
+        case "da_huy":
+          return "Đã hủy"; // Text hiển thị
         default:
           return status;
       }

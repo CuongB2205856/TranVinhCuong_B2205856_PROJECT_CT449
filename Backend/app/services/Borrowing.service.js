@@ -25,11 +25,16 @@ class BorrowingService {
         `Tài khoản đã bị khóa do vi phạm quá hạn ${reader.SoLanViPham} lần.`
       );
     }
-    
-    const borrowingCount = await Borrowing.countDocuments({ MaDocGia: ReaderId, TrangThai: { $in: ['cho_xac_nhan', 'dang_muon'] } });
+
+    const borrowingCount = await Borrowing.countDocuments({
+      MaDocGia: ReaderId,
+      TrangThai: { $in: ["cho_xac_nhan", "dang_muon"] },
+    });
     if (borrowingCount >= 3) {
-            throw new Error("Bạn chỉ được mượn tối đa 3 cuốn sách cùng lúc. Vui lòng trả sách cũ trước khi mượn tiếp.");
-        }
+      throw new Error(
+        "Bạn chỉ được mượn tối đa 3 cuốn sách cùng lúc. Vui lòng trả sách cũ trước khi mượn tiếp."
+      );
+    }
 
     // 2. Kiểm tra sách
     const book = await Book.findById(BookId);
@@ -63,28 +68,28 @@ class BorrowingService {
   }
 
   // [PUT] Admin từ chối cho mượn
-    async rejectBorrowing(id) {
-        const record = await Borrowing.findById(id);
-        if (!record) throw new Error("Phiếu mượn không tồn tại.");
+  async rejectBorrowing(id) {
+    const record = await Borrowing.findById(id);
+    if (!record) throw new Error("Phiếu mượn không tồn tại.");
 
-        if (record.TrangThai !== 'cho_xac_nhan') {
-            throw new Error("Không thể từ chối phiếu không ở trạng thái chờ.");
-        }
-
-        // QUAN TRỌNG: Vì lúc tạo phiếu đã trừ kho (createBorrowing), 
-        // nên khi từ chối phải cộng lại kho sách.
-        await Book.findByIdAndUpdate(record.MaSach, { $inc: { SoQuyen: 1 } });
-
-        record.TrangThai = 'da_tu_choi';
-        return await record.save();
+    if (record.TrangThai !== "cho_xac_nhan") {
+      throw new Error("Không thể từ chối phiếu không ở trạng thái chờ.");
     }
 
-    // [GET] Lấy lịch sử mượn của riêng độc giả
-    async getBorrowingsByReader(readerId) {
-        return Borrowing.find({ MaDocGia: readerId })
-            .populate('MaSach', 'TenSach AnhBia')
-            .sort({ NgayMuon: -1 });
-    }
+    // QUAN TRỌNG: Vì lúc tạo phiếu đã trừ kho (createBorrowing),
+    // nên khi từ chối phải cộng lại kho sách.
+    await Book.findByIdAndUpdate(record.MaSach, { $inc: { SoQuyen: 1 } });
+
+    record.TrangThai = "da_tu_choi";
+    return await record.save();
+  }
+
+  // [GET] Lấy lịch sử mượn của riêng độc giả
+  async getBorrowingsByReader(readerId) {
+    return Borrowing.find({ MaDocGia: readerId })
+      .populate("MaSach", "TenSach AnhBia")
+      .sort({ NgayMuon: -1 });
+  }
 
   // [PUT] Giai đoạn 3: Trả sách (Cập nhật logic tính phạt)
   async returnBook(id) {
@@ -135,6 +140,29 @@ class BorrowingService {
       data: record,
     };
   }
-}
+  // [PUT] Người dùng tự hủy yêu cầu
+  async cancelBorrowing(id, userId) {
+    const record = await Borrowing.findById(id);
+    if (!record) throw new Error("Phiếu mượn không tồn tại.");
 
+    // 1. Kiểm tra chính chủ (Bảo mật)
+    if (record.MaDocGia.toString() !== userId.toString()) {
+      throw new Error("Bạn không có quyền hủy phiếu này.");
+    }
+
+    // 2. Chỉ được hủy khi đang chờ xác nhận
+    if (record.TrangThai !== "cho_xac_nhan") {
+      throw new Error(
+        "Không thể hủy phiếu khi sách đã được duyệt hoặc đã trả."
+      );
+    }
+
+    // 3. Hoàn lại số lượng sách vào kho (QUAN TRỌNG)
+    await Book.findByIdAndUpdate(record.MaSach, { $inc: { SoQuyen: 1 } });
+
+    // 4. Cập nhật trạng thái
+    record.TrangThai = "da_huy";
+    return await record.save();
+  }
+}
 module.exports = new BorrowingService();

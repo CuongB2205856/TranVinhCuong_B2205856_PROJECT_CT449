@@ -1,14 +1,13 @@
 // backend/app/services/Reader.service.js
 
-const Reader = require("../models/Reader.model"); // Import Model mới
+const Reader = require("../models/Reader.model");
 const jwt = require("jsonwebtoken");
-const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN;
+const config = require("../config"); // <--- IMPORT CONFIG
 
-// Helper tạo Token
+// Sử dụng config.jwt thay vì process.env
 const signToken = (id) => {
-  return jwt.sign({ id }, JWT_SECRET, {
-    expiresIn: JWT_EXPIRES_IN,
+  return jwt.sign({ id }, config.jwt.secret, {
+    expiresIn: config.jwt.expiresIn, // <--- SỬA Ở ĐÂY
   });
 };
 

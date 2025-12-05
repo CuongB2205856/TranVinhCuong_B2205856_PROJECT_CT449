@@ -1,15 +1,14 @@
 // backend/app/services/Staff.service.js
 
 const Staff = require("../models/Staff.model");
-const Book = require("../models/Book.model");          
+const Book = require("../models/Book.model");
 const Borrowing = require("../models/Borrowing.model");
 const jwt = require("jsonwebtoken");
-const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN;
+const config = require("../config");
 
 const signToken = (id) => {
-  return jwt.sign({ id }, JWT_SECRET, {
-    expiresIn: JWT_EXPIRES_IN,
+  return jwt.sign({ id }, config.jwt.secret, {
+    expiresIn: config.jwt.expiresIn,
   });
 };
 
@@ -33,47 +32,61 @@ class StaffService {
 
   // [AUTH] Login
   async checkLogin(staffId, password) {
-    // 1. Tìm staff (Model Staff dùng alias _id = MSNV, nên findById vẫn work)
     const staff = await Staff.findById(staffId).select("+Password");
 
     if (!staff || !staff.Password) {
-      throw Object.assign(
-        new Error("Incorrect Staff ID or password."),
-        { statusCode: 401 }
-      );
+      throw Object.assign(new Error("Incorrect Staff ID or password."), {
+        statusCode: 401,
+      });
     }
 
-    // 2. So sánh pass
     const isMatch = await staff.comparePassword(password);
 
     if (!isMatch) {
-      throw Object.assign(
-        new Error("Incorrect Staff ID or password."),
-        { statusCode: 401 }
-      );
+      throw Object.assign(new Error("Incorrect Staff ID or password."), {
+        statusCode: 401,
+      });
     }
-    
-    // 3. Tạo token
-    const token = signToken(staff._id); 
 
+    const token = signToken(staff._id);
     staff.Password = undefined;
     return { user: staff, token };
-  }async getSystemStats() {
-    // 1. Thống kê Sách
-    const totalBooks = await Book.countDocuments(); // Tổng số đầu sách (Titles)
-    
-    // Tính tổng giá trị kho sách hiện tại (Số quyển * Đơn giá)
-    const totalValueResult = await Book.aggregate([
-        { 
-            $group: { 
-                _id: null, 
-                total: { $sum: { $multiply: ["$DonGia", "$SoQuyen"] } } 
-            } 
+  }
+
+  // [GET] Thống kê hệ thống
+  async getSystemStats() {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const totalBooks = await Book.countDocuments(); 
+
+    // TÍNH THU NHẬP THÁNG NÀY
+    const revenueResult = await Borrowing.aggregate([
+        {
+            $match: {
+                TrangThai: 'da_tra', 
+                NgayTra: { $gte: startOfMonth, $lte: now } 
+            }
+        },
+        {
+            $lookup: {
+                from: 'Sach',       
+                localField: 'MaSach',
+                foreignField: '_id',
+                as: 'bookInfo'
+            }
+        },
+        { $unwind: '$bookInfo' },
+        {
+            $group: {
+                _id: null,
+                totalIncome: { $sum: '$bookInfo.DonGia' } 
+            }
         }
     ]);
-    const totalValue = totalValueResult.length > 0 ? totalValueResult[0].total : 0;
 
-    // 2. Thống kê Mượn Trả
+    const currentMonthRevenue = revenueResult.length > 0 ? revenueResult[0].totalIncome : 0;
+
     const borrowingStats = await Borrowing.aggregate([
         {
             $group: {
@@ -83,7 +96,6 @@ class StaffService {
         }
     ]);
 
-    // Chuyển mảng thành object cho dễ dùng
     const statsMap = borrowingStats.reduce((acc, curr) => {
         acc[curr._id] = curr.count;
         return acc;
@@ -92,16 +104,19 @@ class StaffService {
     return {
         books: {
             totalTitles: totalBooks,
-            totalValue: totalValue
+            revenue: currentMonthRevenue 
         },
         borrowing: {
-            dang_muon: statsMap['dang_muon'] || 0,     // Sách đang mượn (Chưa trả)
-            da_tra: statsMap['da_tra'] || 0,           // Sách đã trả
+            dang_muon: statsMap['dang_muon'] || 0,
+            da_tra: statsMap['da_tra'] || 0,
             cho_xac_nhan: statsMap['cho_xac_nhan'] || 0,
-            da_tu_choi: statsMap['da_tu_choi'] || 0
+            da_tu_choi: statsMap['da_tu_choi'] || 0,
+            da_huy: statsMap['da_huy'] || 0
         }
     };
   }
+  
+  // ⚠️ ĐÃ XÓA ĐOẠN CODE FRONTEND (api.get, api.post) Ở ĐÂY ĐỂ TRÁNH LỖI SERVER
 }
 
 module.exports = new StaffService();

@@ -29,17 +29,17 @@
             </v-col>
 
             <v-col cols="12" md="6">
-                <v-card class="mx-auto" color="green-darken-2" theme="dark" elevation="10">
+                <v-card class="mx-auto" color="teal-darken-2" theme="dark" elevation="10">
                     <v-card-item>
                         <v-card-title class="text-h5 font-weight-bold">
                             <v-icon size="large" start>mdi-cash-multiple</v-icon>
-                            Tổng Giá Trị Kho
+                            Thu Nhập Tháng {{ currentMonth }}
                         </v-card-title>
                         <div class="text-h2 font-weight-black mt-4 text-center">
-                            {{ formatCurrency(stats.books.totalValue) }}
+                            {{ formatCurrency(stats.books.revenue) }}
                         </div>
                         <v-card-subtitle class="text-center mt-2 text-subtitle-1">
-                            Giá trị tài sản sách hiện có
+                            Từ sách đã trả thành công
                         </v-card-subtitle>
                     </v-card-item>
                 </v-card>
@@ -108,8 +108,11 @@ export default {
     data() {
         return {
             isLoading: false,
+            // Thêm biến tháng hiện tại
+            currentMonth: new Date().getMonth() + 1,
             stats: {
-                books: { totalTitles: 0, totalValue: 0 },
+                // Sửa key totalValue -> revenue cho khớp backend
+                books: { totalTitles: 0, revenue: 0 }, 
                 borrowing: { dang_muon: 0, da_tra: 0, cho_xac_nhan: 0, da_tu_choi: 0 }
             }
         };
@@ -118,12 +121,11 @@ export default {
         async fetchStats() {
             this.isLoading = true;
             try {
-                // Gọi API vừa tạo ở Backend
                 const res = await api.get('/api/staffs/stats');
                 this.stats = res.data;
             } catch (error) {
                 console.error("Lỗi tải thống kê:", error);
-                alert("Không thể tải dữ liệu thống kê.");
+                // Không alert lỗi để tránh làm phiền nếu chỉ là lỗi mạng thoáng qua
             } finally {
                 this.isLoading = false;
             }

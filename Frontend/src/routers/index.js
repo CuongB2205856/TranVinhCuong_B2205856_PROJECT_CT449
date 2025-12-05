@@ -13,6 +13,8 @@ import AdminCatalog from "../views/AdminCatalog.vue";
 import Profile from "../views/Profile.vue";
 import AdminPublisher from "../views/AdminPublisher.vue"; // Component NXB
 import AdminStats from "../views/AdminStats.vue";
+import NotFound from "../views/NotFound.vue";
+import AdminStaff from "../views/AdminStaff.vue"; // Component Nhân viên
 
 const routes = [
   {
@@ -53,6 +55,7 @@ const routes = [
       }
     },
   },
+  
   // --- ADMIN AREA ---
   {
     path: "/admin/login",
@@ -62,40 +65,46 @@ const routes = [
   {
     path: "/admin",
     component: AdminLayout,
-    meta: { requiresAuth: true, roles: ["Admin"] },
+    meta: { requiresAuth: true, roles: ["Admin"] }, // Bảo mật cấp cha
     children: [
       {
         path: "",
         redirect: "/admin/dashboard",
       },
-      // SỬA: Dashboard trỏ về AdminStats
       {
         path: "dashboard",
         name: "AdminDashboard",
-        component: AdminStats, // Component mới
-        meta: { requiresAuth: true, roles: ["Admin"] },
+        component: AdminStats,
       },
-      // Thêm route riêng cho quản lý sách (Catalog)
       {
         path: "books",
         name: "AdminBooks",
         component: AdminCatalog,
-        meta: { requiresAuth: true, roles: ["Admin"] },
       },
-      // --- SỬA LẠI: Đưa route publishers vào trong children ---
       {
-        path: "publishers", // Khi đó URL sẽ là /admin/publishers
+        path: "publishers",
         name: "AdminPublishers",
         component: AdminPublisher,
-        meta: { requiresAuth: true, roles: ["Admin"] },
       },
       {
         path: "borrowings",
         name: "AdminBorrowings",
         component: () => import("../views/AdminBorrowing.vue"),
-        meta: { requiresAuth: true, roles: ["Admin", "Thủ thư"] }, // Thêm quyền Thủ thư nếu có
+      },
+      // 2. THÊM ROUTE NHÂN VIÊN VÀO ĐÂY
+      {
+        path: "staffs", 
+        name: "AdminStaffs",
+        component: AdminStaff,
+        // Route này tự động được bảo mật nhờ settings của route cha "/admin"
+        // Chỉ Admin mới truy cập được.
       },
     ],
+  },
+  {
+    path: "/:pathMatch(.*)*",
+    name: "not-found",
+    component: NotFound,
   },
 ];
 

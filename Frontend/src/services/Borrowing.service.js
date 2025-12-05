@@ -41,6 +41,9 @@ class BorrowingService {
     async rejectBorrowing(id) {
         return (await api.put(`/api/borrowings/reject/${id}`)).data;
     }
+    async cancelBorrowing(id) {
+        return (await api.put(`/api/borrowings/cancel/${id}`)).data;
+    }
 }
 
 export default new BorrowingService();

@@ -48,3 +48,11 @@ exports.rejectBorrowing = async (req, res, next) => {
         res.send({ message: "Đã từ chối yêu cầu mượn sách.", data: result });
     } catch (err) { next(err); }
 };
+// [PUT] User hủy phiếu
+exports.cancelBorrowing = async (req, res, next) => {
+    try {
+        // req.user._id lấy từ middleware auth
+        const result = await BorrowingService.cancelBorrowing(req.params.id, req.user._id);
+        res.send({ message: "Đã hủy yêu cầu mượn sách.", data: result });
+    } catch (err) { next(err); }
+};

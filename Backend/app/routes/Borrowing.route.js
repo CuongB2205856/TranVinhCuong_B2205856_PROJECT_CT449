@@ -17,5 +17,7 @@ router.post('/', controller.createBorrowing);
 router.put('/approve/:id', auth.restrictTo('Admin'), controller.approveBorrowing);
 router.put('/reject/:id', auth.restrictTo('Admin'), controller.rejectBorrowing); // Thêm route từ chối
 router.put('/return/:id', auth.restrictTo('Admin'), controller.returnBook);
+// Thêm route hủy (Đặt trước route có :id nếu cần, hoặc đặt cuối cũng được)
+router.put('/cancel/:id', controller.cancelBorrowing);
 
 module.exports = router;
