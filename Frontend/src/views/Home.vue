@@ -158,7 +158,7 @@ export default {
       }
     },
     checkLoginStatus() {
-      this.isLoggedIn = !!localStorage.getItem("token");
+      this.isLoggedIn = !!sessionStorage.getItem("token");
     }
   },
   created() {

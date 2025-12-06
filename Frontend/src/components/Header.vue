@@ -82,7 +82,7 @@ export default {
     },
     methods: {
         checkUserStatus() {
-            const userData = localStorage.getItem('user');
+            const userData = sessionStorage.getItem('user');
             if (userData) {
                 try {
                     this.user = JSON.parse(userData);
@@ -105,8 +105,8 @@ export default {
         },
         logout() {
             if(confirm("Bạn có chắc chắn muốn đăng xuất?")) {
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
+                sessionStorage.removeItem('token');
+                sessionStorage.removeItem('user');
                 this.checkUserStatus();
                 this.$router.push('/login');
             }

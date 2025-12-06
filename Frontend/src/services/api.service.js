@@ -12,7 +12,7 @@ const api = axios.create({
 // 1. Request Interceptor: Gắn Token vào Header (Giữ nguyên code cũ của bạn)
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -41,11 +41,11 @@ api.interceptors.response.use(
       // Ta không muốn logout hay alert "Hết hạn" trong trường hợp đó.
       if (!originalRequestUrl.includes('/login')) {
         
-        // Chỉ xử lý nếu trong localStorage đang có token (tức là user đang đăng nhập)
-        if (localStorage.getItem("token")) {
-            // 1. Xóa thông tin user trong LocalStorage
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
+        // Chỉ xử lý nếu trong sessionStorage đang có token (tức là user đang đăng nhập)
+        if (sessionStorage.getItem("token")) {
+            // 1. Xóa thông tin user trong sessionStorage
+            sessionStorage.removeItem("token");
+            sessionStorage.removeItem("user");
 
             // 2. Hiển thị thông báo cho người dùng
             alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");

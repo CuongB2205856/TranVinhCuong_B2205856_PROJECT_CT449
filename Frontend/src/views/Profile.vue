@@ -300,7 +300,7 @@ export default {
     },
 
     loadUser() {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = sessionStorage.getItem("user");
       if (storedUser) {
         this.userData = JSON.parse(storedUser);
       } else {
@@ -369,8 +369,8 @@ export default {
         const imageUrl = res.data.secure_url;
         await ReaderService.updateReader(this.userData._id, { HinhAnh: imageUrl });
         this.userData.HinhAnh = imageUrl;
-        const currentUser = JSON.parse(localStorage.getItem("user"));
-        localStorage.setItem("user", JSON.stringify({ ...currentUser, HinhAnh: imageUrl }));
+        const currentUser = JSON.parse(sessionStorage.getItem("user"));
+        sessionStorage.setItem("user", JSON.stringify({ ...currentUser, HinhAnh: imageUrl }));
         this.showSnackbar("Cập nhật ảnh thành công!", "success");
       } catch (error) { this.showSnackbar("Lỗi khi upload ảnh.", "error"); } finally { this.isUploading = false; event.target.value = null; }
     },
@@ -385,7 +385,7 @@ export default {
         const updateData = { HoLot: values.HoLot, Ten: values.Ten, Phai: values.Phai, DienThoai: values.DienThoai };
         await ReaderService.updateReader(this.userData._id, updateData);
         const newUser = { ...this.userData, ...updateData };
-        localStorage.setItem("user", JSON.stringify(newUser));
+        sessionStorage.setItem("user", JSON.stringify(newUser));
         this.userData = newUser;
         this.showSnackbar("Cập nhật thông tin thành công!", "success");
         this.dialogEdit = false;
@@ -397,7 +397,7 @@ export default {
         await ReaderService.updateReader(this.userData._id, { OldPassword: values.currentPassword, Password: values.newPassword });
         this.showSnackbar("Đổi mật khẩu thành công! Đăng nhập lại...", "success");
         this.dialogPassword = false; resetForm();
-        setTimeout(() => { localStorage.removeItem("token"); localStorage.removeItem("user"); this.$router.push("/login"); }, 2000);
+        setTimeout(() => { sessionStorage.removeItem("token"); sessionStorage.removeItem("user"); this.$router.push("/login"); }, 2000);
       } catch (error) { this.pwdError = error.response?.data?.message || "Đổi mật khẩu thất bại."; } finally { this.isLoading = false; }
     },
     showSnackbar(msg, color) {

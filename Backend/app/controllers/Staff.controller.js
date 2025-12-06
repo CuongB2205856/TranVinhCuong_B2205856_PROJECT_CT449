@@ -82,3 +82,20 @@ exports.updateProfile = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.updateStaffByAdmin = async (req, res, next) => {
+    try {
+        const staffId = req.params.id; // Lấy ID từ URL
+        const updatedStaff = await StaffService.updateStaff(staffId, req.body);
+        
+        // Ẩn mật khẩu nếu có trả về
+        updatedStaff.Password = undefined; 
+        
+        res.status(200).json({ 
+            message: "Cập nhật nhân viên thành công.", 
+            data: updatedStaff 
+        });
+    } catch (error) {
+        next(error);
+    }
+};

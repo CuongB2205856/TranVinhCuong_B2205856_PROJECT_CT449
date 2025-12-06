@@ -35,6 +35,11 @@ const StaffSchema = new mongoose.Schema(
       type: String,
       default: "https://res.cloudinary.com/dquwesxem/image/upload/v1765020465/3607444_xaitxz.png",
     },
+    TrangThai: {
+        type: String,
+        enum: ['Active', 'Blocked'], // Active: Hoạt động, Blocked: Bị khóa
+        default: 'Active'
+    }
   },
   {
     versionKey: false,

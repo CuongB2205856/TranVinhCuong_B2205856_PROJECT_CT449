@@ -119,10 +119,10 @@ export default {
                 await StaffService.updateProfile({ HinhAnh: imgUrl });
                 this.staffData.HinhAnh = imgUrl;
                 
-                // Cập nhật localStorage để Header nhận diện ngay
-                const user = JSON.parse(localStorage.getItem('user'));
+                // Cập nhật sessionStorage để Header nhận diện ngay
+                const user = JSON.parse(sessionStorage.getItem('user'));
                 user.HinhAnh = imgUrl;
-                localStorage.setItem('user', JSON.stringify(user));
+                sessionStorage.setItem('user', JSON.stringify(user));
                 
                 this.showMsg("Cập nhật ảnh đại diện thành công", "success");
             } catch(e) { this.showMsg("Lỗi upload ảnh", "error"); }
@@ -132,10 +132,10 @@ export default {
             this.isLoading = true;
             try {
                 await StaffService.updateProfile(this.staffData);
-                // Cập nhật localStorage
-                const user = JSON.parse(localStorage.getItem('user'));
+                // Cập nhật sessionStorage
+                const user = JSON.parse(sessionStorage.getItem('user'));
                 user.HoTenNV = this.staffData.HoTenNV;
-                localStorage.setItem('user', JSON.stringify(user));
+                sessionStorage.setItem('user', JSON.stringify(user));
                 
                 this.showMsg("Cập nhật thông tin thành công", "success");
             } catch(e) { this.showMsg("Lỗi cập nhật", "error"); }

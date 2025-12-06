@@ -49,7 +49,7 @@ const routes = [
     name: "Profile",
     component: Profile,
     beforeEnter: (to, from, next) => {
-      if (localStorage.getItem("token")) {
+      if (sessionStorage.getItem("token")) {
         next();
       } else {
         next("/login");
@@ -127,9 +127,9 @@ const router = createRouter({
 
 // --- PHẦN QUAN TRỌNG: NAVIGATION GUARD ---
 router.beforeEach((to, from, next) => {
-  // 1. Lấy thông tin đăng nhập từ LocalStorage
-  const token = localStorage.getItem("token");
-  const userStr = localStorage.getItem("user");
+  // 1. Lấy thông tin đăng nhập từ sessionStorage
+  const token = sessionStorage.getItem("token");
+  const userStr = sessionStorage.getItem("user");
   const user = userStr ? JSON.parse(userStr) : null;
 
   // 2. Kiểm tra nếu route yêu cầu đăng nhập

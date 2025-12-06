@@ -40,72 +40,108 @@
             {{ item.Chucvu }}
           </v-chip>
         </template>
+
+        <template v-slot:item.TrangThai="{ item }">
+            <v-chip
+                :color="item.TrangThai === 'Blocked' ? 'grey' : 'green'"
+                variant="elevated"
+                size="small"
+                class="text-white font-weight-bold"
+            >
+                <v-icon start size="small">
+                    {{ item.TrangThai === 'Blocked' ? 'mdi-lock' : 'mdi-check-circle' }}
+                </v-icon>
+                {{ item.TrangThai === 'Blocked' ? 'Đã Khóa' : 'Hoạt Động' }}
+            </v-chip>
+        </template>
+
+        <template v-slot:item.actions="{ item }">
+            <div v-if="item._id !== currentAdminId">
+                <v-btn 
+                    v-if="item.TrangThai !== 'Blocked'"
+                    color="red"
+                    size="small" 
+                    variant="text"
+                    icon="mdi-lock"
+                    title="Khóa tài khoản"
+                    @click="confirmToggleStatus(item, 'Blocked')"
+                ></v-btn>
+                <v-btn 
+                    v-else
+                    color="green" 
+                    size="small" 
+                    variant="text"
+                    icon="mdi-lock-open-variant"
+                    title="Mở khóa tài khoản"
+                    @click="confirmToggleStatus(item, 'Active')"
+                ></v-btn>
+            </div>
+        </template>
       </v-data-table>
     </v-card>
 
     <v-dialog v-model="dialog" max-width="600px" persistent>
-      <v-card>
-        <v-card-title class="bg-red-darken-3 text-white pa-4">
-          <span class="text-h5">Thêm Nhân Viên Mới</span>
-        </v-card-title>
+        <v-card>
+            <v-card-title class="bg-red-darken-3 text-white pa-4">
+            <span class="text-h5">Thêm Nhân Viên Mới</span>
+            </v-card-title>
 
-        <v-card-text class="pt-6">
-          <v-form ref="form" v-model="valid">
-            <v-row>
-              
-              <v-col cols="12">
-                <v-text-field
-                v-model="newItem.HoTenNV"
-                label="Họ và Tên *"
-                variant="outlined"
-                density="compact"
-                :rules="[v => !!v || 'Bắt buộc']"
-                prepend-inner-icon="mdi-account"
-                ></v-text-field>
-              </v-col>
-              
-              <v-col cols="12">
-                <v-text-field
-                v-model="newItem.Password"
-                label="Mật khẩu *"
-                type="password"
-                variant="outlined"
-                density="compact"
-                :rules="[v => !!v || 'Bắt buộc', v => (v && v.length >= 6) || 'Tối thiểu 6 ký tự']"
-                prepend-inner-icon="mdi-lock"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12">
-                <v-select
-                  v-model="newItem.Chucvu"
-                  :items="['Admin', 'Thủ thư']"
-                  label="Chức vụ *"
-                  variant="outlined"
-                  density="compact"
-                  :rules="[v => !!v || 'Bắt buộc']"
-                  prepend-inner-icon="mdi-badge-account"
-                ></v-select>
-              </v-col>
-              
-              <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="newItem.SoDienThoai"
-                  label="Số Điện Thoại"
-                  variant="outlined"
-                  density="compact"
-                  prepend-inner-icon="mdi-phone"
-                ></v-text-field>
-              </v-col>
-            </v-row>
-          </v-form>
-        </v-card-text>
+            <v-card-text class="pt-6">
+            <v-form ref="form" v-model="valid">
+                <v-row>
+                <v-col cols="12">
+                    <v-text-field
+                    v-model="newItem.HoTenNV"
+                    label="Họ và Tên *"
+                    variant="outlined"
+                    density="compact"
+                    :rules="[v => !!v || 'Bắt buộc']"
+                    prepend-inner-icon="mdi-account"
+                    ></v-text-field>
+                </v-col>
+                
+                <v-col cols="12">
+                    <v-text-field
+                    v-model="newItem.Password"
+                    label="Mật khẩu *"
+                    type="password"
+                    variant="outlined"
+                    density="compact"
+                    :rules="[v => !!v || 'Bắt buộc', v => (v && v.length >= 6) || 'Tối thiểu 6 ký tự']"
+                    prepend-inner-icon="mdi-lock"
+                    ></v-text-field>
+                </v-col>
+                <v-col cols="12">
+                    <v-select
+                    v-model="newItem.Chucvu"
+                    :items="['Admin', 'Thủ thư']"
+                    label="Chức vụ *"
+                    variant="outlined"
+                    density="compact"
+                    :rules="[v => !!v || 'Bắt buộc']"
+                    prepend-inner-icon="mdi-badge-account"
+                    ></v-select>
+                </v-col>
+                
+                <v-col cols="12" sm="6">
+                    <v-text-field
+                    v-model="newItem.SoDienThoai"
+                    label="Số Điện Thoại"
+                    variant="outlined"
+                    density="compact"
+                    prepend-inner-icon="mdi-phone"
+                    ></v-text-field>
+                </v-col>
+                </v-row>
+            </v-form>
+            </v-card-text>
 
-        <v-card-actions class="pa-4 border-t">
-          <v-spacer></v-spacer>
-          <v-btn color="grey-darken-1" variant="text" @click="closeDialog">Hủy</v-btn>
-          <v-btn color="red-darken-3" variant="elevated" @click="save" :loading="isSaving">Lưu</v-btn>
-        </v-card-actions>
-      </v-card>
+            <v-card-actions class="pa-4 border-t">
+            <v-spacer></v-spacer>
+            <v-btn color="grey-darken-1" variant="text" @click="closeDialog">Hủy</v-btn>
+            <v-btn color="red-darken-3" variant="elevated" @click="save" :loading="isSaving">Lưu</v-btn>
+            </v-card-actions>
+        </v-card>
     </v-dialog>
   </v-container>
 </template>
@@ -124,13 +160,16 @@ export default {
       search: "",
       error: null,
       success: null,
+      currentAdminId: "", // Để tránh tự khóa
       
       staffList: [],
       headers: [
-        { title: "MSNV", key: "_id", align: "start" }, // Vẫn hiển thị MSNV trong bảng để Admin biết
+        { title: "MSNV", key: "_id", align: "start" }, 
         { title: "Họ Tên", key: "HoTenNV" },
         { title: "Chức Vụ", key: "Chucvu" },
         { title: "SĐT", key: "SoDienThoai" },
+        { title: "Trạng Thái", key: "TrangThai", align: "center" }, // Cột mới
+        { title: "Thao Tác", key: "actions", sortable: false, align: "end" }, // Cột mới
       ],
 
       newItem: {
@@ -140,17 +179,19 @@ export default {
         Chucvu: "Thủ thư",
         SoDienThoai: ""
       },
-      defaultItem: {
-        _id: "",
-        HoTenNV: "",
-        Password: "",
-        Chucvu: "Thủ thư",
-        SoDienThoai: ""
-      }
+      defaultItem: { /* ... */ } // Giữ nguyên
     };
   },
   created() {
     this.fetchStaffs();
+    // Lấy ID admin hiện tại từ sessionStorage
+    const userStr = sessionStorage.getItem('user');
+    if(userStr) {
+        try {
+            const user = JSON.parse(userStr);
+            this.currentAdminId = user._id;
+        } catch(e){}
+    }
   },
   methods: {
     async fetchStaffs() {
@@ -164,13 +205,28 @@ export default {
       }
     },
     
+    // Logic xác nhận và gọi API
+    async confirmToggleStatus(item, newStatus) {
+        const actionText = newStatus === 'Blocked' ? 'khóa' : 'mở khóa';
+        if (!confirm(`Bạn có chắc chắn muốn ${actionText} tài khoản "${item.HoTenNV}" không?`)) return;
+
+        try {
+            await StaffService.updateStaff(item._id, { TrangThai: newStatus });
+            this.success = `Đã ${actionText} tài khoản thành công!`;
+            this.fetchStaffs(); // Load lại danh sách
+        } catch (error) {
+            this.error = error.response?.data?.message || "Lỗi khi cập nhật trạng thái.";
+        }
+    },
+
     openDialog() {
-      this.newItem = { ...this.defaultItem };
-      
-      // Tự động tạo MSNV ngẫu nhiên (Ví dụ: NV1701234567)
-      // Sử dụng Date.now() để đảm bảo không trùng lặp
-      this.newItem._id = "NV" + Date.now().toString(); 
-      
+      this.newItem = { 
+          _id: "NV" + Date.now().toString(),
+          HoTenNV: "",
+          Password: "",
+          Chucvu: "Thủ thư",
+          SoDienThoai: ""
+      };
       this.dialog = true;
     },
 
@@ -186,7 +242,9 @@ export default {
       this.isSaving = true;
       this.error = null;
       try {
-        await StaffService.createStaff(this.newItem);
+        // Mặc định tạo mới là Active
+        const payload = { ...this.newItem, TrangThai: 'Active' };
+        await StaffService.createStaff(payload);
         this.success = `Thêm nhân viên thành công! Mã số: ${this.newItem._id}`;
         this.fetchStaffs();
         this.closeDialog();

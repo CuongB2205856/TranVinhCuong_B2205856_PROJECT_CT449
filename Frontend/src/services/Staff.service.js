@@ -22,6 +22,10 @@ class StaffService {
     async updateProfile(data) {
         return (await api.put("/api/staffs/profile", data)).data;
     }
+    // --- THÊM MỚI ---
+    async updateStaff(id, data) {
+        return (await api.put(`/api/staffs/${id}`, data)).data;
+    }
 }
 
 export default new StaffService();

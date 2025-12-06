@@ -86,7 +86,7 @@ export default {
   },
   methods: {
     loadUser() {
-      const userStr = localStorage.getItem("user");
+      const userStr = sessionStorage.getItem("user");
       if (userStr) {
         try {
           this.adminUser = JSON.parse(userStr);
@@ -100,8 +100,8 @@ export default {
     },
     logout() {
       if (confirm("Bạn có chắc chắn muốn đăng xuất?")) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
+        sessionStorage.removeItem("token");
+        sessionStorage.removeItem("user");
         this.$router.push("/admin/login");
       }
     },

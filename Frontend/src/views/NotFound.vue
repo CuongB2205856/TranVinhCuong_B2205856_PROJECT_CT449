@@ -42,7 +42,7 @@ export default {
   name: "NotFound",
   computed: {
     homePath() {
-      const userStr = localStorage.getItem("user");
+      const userStr = sessionStorage.getItem("user");
       if (userStr) {
         try {
           const user = JSON.parse(userStr);

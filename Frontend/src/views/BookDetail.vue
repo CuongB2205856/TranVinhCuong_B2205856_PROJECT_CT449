@@ -35,38 +35,24 @@
 
           <v-divider class="my-4"></v-divider>
 
-          <v-list dense>
+          <v-list density="compact">
             <v-list-item>
-              <v-list-item-content>
-                <v-list-item-title class="font-weight-medium"
-                  >Mã sách:</v-list-item-title
-                >
+                <v-list-item-title class="font-weight-medium">Mã sách:</v-list-item-title>
                 <v-list-item-subtitle>{{ book._id }}</v-list-item-subtitle>
-              </v-list-item-content>
             </v-list-item>
 
             <v-list-item>
-              <v-list-item-content>
-                <v-list-item-title class="font-weight-medium"
-                  >Nhà xuất bản:</v-list-item-title
-                >
-                <v-list-item-subtitle
-                  >{{ book.NXB?.TenNXB }} ({{
-                    book.NamXuatBan
-                  }})</v-list-item-subtitle
-                >
-              </v-list-item-content>
+                <v-list-item-title class="font-weight-medium">Nhà xuất bản:</v-list-item-title>
+                <v-list-item-subtitle>
+                    {{ book.NXB?.TenNXB }} ({{ book.NamXuatBan }})
+                </v-list-item-subtitle>
             </v-list-item>
 
             <v-list-item>
-              <v-list-item-content>
-                <v-list-item-title class="font-weight-medium"
-                  >Đơn giá:</v-list-item-title
-                >
-                <v-list-item-subtitle>{{
-                  formatCurrency(book.DonGia)
-                }}</v-list-item-subtitle>
-              </v-list-item-content>
+                <v-list-item-title class="font-weight-medium">Đơn giá:</v-list-item-title>
+                <v-list-item-subtitle>
+                    {{ formatCurrency(book.DonGia) }}
+                </v-list-item-subtitle>
             </v-list-item>
           </v-list>
 
@@ -127,7 +113,7 @@ export default {
   },
   computed: {
     isAuthenticated() {
-      return !!localStorage.getItem("token");
+      return !!sessionStorage.getItem("token");
     },
   },
   methods: {
@@ -136,7 +122,7 @@ export default {
       this.error = null;
       try {
         const bookId = this.$route.params.id;
-        // SỬA: Gọi hàm getBookById
+        // Gọi hàm getBookById
         const data = await BookService.getBookById(bookId);
         this.book = data;
       } catch (err) {
@@ -158,7 +144,7 @@ export default {
         return;
       }
 
-      const userData = JSON.parse(localStorage.getItem("user"));
+      const userData = JSON.parse(sessionStorage.getItem("user"));
       // Backend trả về _id cho user (Reader)
       const readerId = userData ? userData._id : null;
 
@@ -170,9 +156,9 @@ export default {
       this.isLoading = true;
       this.error = null;
       try {
-        // SỬA: Gọi createBorrowing(BookId, ReaderId)
+        // Gọi createBorrowing(BookId, ReaderId)
         // Lưu ý: this.book._id là BookId
-        const result = await BorrowingService.createBorrowing(this.book._id, readerId);
+        await BorrowingService.createBorrowing(this.book._id, readerId);
 
         alert(`✅ Mượn sách thành công!`);
         await this.fetchBookDetails();

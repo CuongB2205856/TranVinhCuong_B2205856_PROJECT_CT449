@@ -90,8 +90,8 @@ export default {
     }
   },
   created() {
-    // 3. Lấy role từ localStorage khi component được tạo
-    const userStr = localStorage.getItem("user");
+    // 3. Lấy role từ sessionStorage khi component được tạo
+    const userStr = sessionStorage.getItem("user");
     if (userStr) {
         const user = JSON.parse(userStr);
         this.userRole = user.Chucvu;

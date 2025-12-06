@@ -89,8 +89,8 @@ export default {
         const { token, data } = await AuthService.loginReader(values.dienthoai, values.password);
         
         const user = data.user;
-        localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify(user));
+        sessionStorage.setItem("token", token);
+        sessionStorage.setItem("user", JSON.stringify(user));
 
         this.$router.push("/books"); 
       } catch (error) {

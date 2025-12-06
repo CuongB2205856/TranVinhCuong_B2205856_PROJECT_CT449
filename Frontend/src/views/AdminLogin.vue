@@ -89,8 +89,8 @@ export default {
           return;
         }
 
-        localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify(user));
+        sessionStorage.setItem("token", token);
+        sessionStorage.setItem("user", JSON.stringify(user));
 
         this.$router.push("/admin/dashboard");
       } catch (error) {

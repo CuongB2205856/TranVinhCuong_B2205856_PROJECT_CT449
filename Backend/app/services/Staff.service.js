@@ -40,6 +40,13 @@ class StaffService {
       });
     }
 
+    // --- THÊM KIỂM TRA TRẠNG THÁI ---
+    if (staff.TrangThai === 'Blocked') {
+        throw Object.assign(new Error("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin."), {
+            statusCode: 403, // Forbidden
+        });
+    }
+
     const isMatch = await staff.comparePassword(password);
 
     if (!isMatch) {
