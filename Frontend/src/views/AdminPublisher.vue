@@ -9,8 +9,22 @@
       </v-btn>
     </div>
 
-    <v-alert v-if="error" type="error" closable class="mb-4">{{ error }}</v-alert>
-    <v-alert v-if="success" type="success" closable class="mb-4">{{ success }}</v-alert>
+    <v-alert
+      v-if="error"
+      type="error"
+      closable
+      class="mb-4"
+      @click:close="error = null"
+      >{{ error }}</v-alert
+    >
+    <v-alert
+      v-if="success"
+      type="success"
+      closable
+      class="mb-4"
+      @click:close="success = null"
+      >{{ success }}</v-alert
+    >
 
     <v-data-table
       :headers="headers"
@@ -41,7 +55,7 @@
       </template>
     </v-data-table>
 
-    <v-dialog v-model="dialog" max-width="600px" persistent>
+    <v-dialog v-model="dialog" max-width="500px" persistent>
       <v-card>
         <v-card-title class="bg-primary text-white pa-4">
           <span class="text-h5">{{ formTitle }}</span>
@@ -52,22 +66,45 @@
             <v-row>
               <v-col cols="12">
                 <v-text-field
+                  v-model="editedItem._id"
+                  label="Mã NXB"
+                  variant="outlined"
+                  density="compact"
+                  prepend-inner-icon="mdi-identifier"
+                  readonly
+                  disabled
+                  color="grey"
+                  hint="Tự động tạo"
+                  persistent-hint
+                ></v-text-field>
+              </v-col>
+
+              <v-col cols="12">
+                <v-text-field
                   v-model="editedItem.TenNXB"
                   label="Tên Nhà Xuất Bản *"
                   variant="outlined"
                   density="compact"
                   prepend-inner-icon="mdi-domain"
-                  :rules="[v => !!v || 'Bắt buộc']"
+                  :rules="[(v) => !!v || 'Bắt buộc']"
                 ></v-text-field>
               </v-col>
+
               <v-col cols="12">
-                <v-text-field
+                <v-autocomplete
                   v-model="editedItem.DiaChi"
-                  label="Địa Chỉ"
+                  :items="provinces"
+                  item-title="name"
+                  item-value="name" 
+                  label="Địa chỉ (Tỉnh / Thành phố)"
+                  placeholder="Nhập tên tỉnh để tìm..."
                   variant="outlined"
                   density="compact"
                   prepend-inner-icon="mdi-map-marker"
-                ></v-text-field>
+                  :loading="loadingProvinces"
+                  no-data-text="Đang tải hoặc không có dữ liệu"
+                  clearable
+                ></v-autocomplete>
               </v-col>
             </v-row>
           </v-container>
@@ -76,7 +113,13 @@
         <v-card-actions class="pa-4 border-t">
           <v-spacer></v-spacer>
           <v-btn color="grey-darken-1" variant="text" @click="close">Hủy</v-btn>
-          <v-btn color="primary" variant="elevated" @click="save" :loading="isSaving">Lưu</v-btn>
+          <v-btn
+            color="primary"
+            variant="elevated"
+            @click="save"
+            :loading="isSaving"
+            >Lưu</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -97,6 +140,7 @@
 
 <script>
 import PublisherService from "@/services/Publisher.service";
+import axios from "axios";
 
 export default {
   name: "AdminPublisher",
@@ -108,26 +152,32 @@ export default {
     error: null,
     success: null,
     search: "",
-    
+
     publishers: [],
-    
+
     headers: [
       { title: "Mã NXB", key: "_id", align: "start" },
       { title: "Tên NXB", key: "TenNXB" },
-      { title: "Địa Chỉ", key: "DiaChi" },
+      { title: "Địa Chỉ (Tỉnh/Thành)", key: "DiaChi" },
       { title: "Thao tác", key: "actions", sortable: false },
     ],
-    
+
     editedIndex: -1,
     editedItem: {
+      _id: "",
       TenNXB: "",
-      DiaChi: ""
+      DiaChi: "", // Lưu trực tiếp tên Tỉnh/Thành
     },
     defaultItem: {
+      _id: "",
       TenNXB: "",
-      DiaChi: ""
+      DiaChi: "",
     },
     itemToDelete: null,
+
+    // Dữ liệu Tỉnh/Thành
+    provinces: [],
+    loadingProvinces: false,
   }),
 
   computed: {
@@ -138,6 +188,7 @@ export default {
 
   created() {
     this.fetchPublishers();
+    this.fetchProvinces();
   },
 
   methods: {
@@ -152,9 +203,28 @@ export default {
       }
     },
 
+    // Lấy danh sách 63 tỉnh thành
+    async fetchProvinces() {
+      this.loadingProvinces = true;
+      try {
+        const res = await axios.get("https://provinces.open-api.vn/api/?depth=1");
+        this.provinces = res.data; 
+      } catch (e) {
+        console.error("Lỗi tải tỉnh thành:", e);
+      } finally {
+        this.loadingProvinces = false;
+      }
+    },
+
+    generateId() {
+      const timestamp = Date.now().toString().slice(-6);
+      return `NXB${timestamp}`;
+    },
+
     openDialog() {
       this.editedIndex = -1;
       this.editedItem = JSON.parse(JSON.stringify(this.defaultItem));
+      this.editedItem._id = this.generateId();
       this.dialog = true;
     },
 
@@ -175,7 +245,6 @@ export default {
         this.success = "Đã xóa NXB thành công.";
         this.fetchPublishers();
       } catch (err) {
-        // Hiển thị lỗi từ backend (ví dụ: NXB đang có sách)
         this.error = err.response?.data?.message || "Xóa thất bại.";
       }
       this.closeDelete();
@@ -204,17 +273,19 @@ export default {
       this.isSaving = true;
       try {
         if (this.editedIndex > -1) {
-          // UPDATE
-          await PublisherService.updatePublisher(this.editedItem._id, this.editedItem);
+          await PublisherService.updatePublisher(
+            this.editedItem._id,
+            this.editedItem
+          );
           this.success = "Cập nhật thành công!";
         } else {
-          // CREATE
           await PublisherService.createPublisher(this.editedItem);
           this.success = "Thêm NXB thành công!";
         }
         await this.fetchPublishers();
         this.close();
       } catch (err) {
+        console.error(err);
         this.error = err.response?.data?.message || "Có lỗi xảy ra khi lưu.";
       } finally {
         this.isSaving = false;

@@ -1,41 +1,18 @@
 <template>
-  <v-container class="d-flex flex-column justify-center align-center h-100vh text-center">
-    <div class="mb-6">
-      <v-icon size="120" color="grey-lighten-1">mdi-alert-circle-outline</v-icon>
+    <div class="min-h-screen flex flex-col items-center justify-center bg-gray-100 text-gray-800 px-4 text-center">
+        <div class="animate-bounce text-red-600 text-8xl font-extrabold drop-shadow-lg">
+            404
+        </div>
+        <h1 class="text-3xl font-bold mt-4">Oops! Trang không tồn tại.</h1>
+        <p class="mt-2 text-gray-600">
+            Có vẻ như bạn đã truy cập một liên kết không hợp lệ hoặc trang đã bị xóa.
+        </p>
+        <router-link to="/" class="mt-6 inline-block px-6 py-3 bg-black text-white rounded-lg shadow-md">
+            Quay về trang chủ
+        </router-link>
     </div>
-    
-    <h1 class="text-h2 font-weight-bold text-primary mb-2">404</h1>
-    <h2 class="text-h5 font-weight-medium text-grey-darken-1 mb-6">
-      Không tìm thấy trang bạn yêu cầu
-    </h2>
-    
-    <p class="text-body-1 text-grey mb-8 max-w-md">
-      Có vẻ như đường dẫn này không tồn tại hoặc đã bị xóa. 
-      Vui lòng kiểm tra lại URL hoặc quay về trang chủ.
-    </p>
-
-    <div class="d-flex gap-4">
-      <v-btn
-        color="primary"
-        size="large"
-        prepend-icon="mdi-home"
-        :to="homePath"
-        elevation="2"
-      >
-        Về Trang Chủ
-      </v-btn>
-      
-      <v-btn
-        variant="outlined"
-        color="primary"
-        size="large"
-        @click="$router.go(-1)"
-      >
-        Quay Lại
-      </v-btn>
-    </div>
-  </v-container>
 </template>
+
 
 <script>
 export default {

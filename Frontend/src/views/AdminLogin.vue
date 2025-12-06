@@ -79,7 +79,10 @@ export default {
       this.serverError = "";
       try {
         // SỬA: Gọi loginStaff
-        const { token, data } = await AuthService.loginStaff(values.msnv, values.password);
+        const { token, data } = await AuthService.loginStaff(
+          values.msnv,
+          values.password
+        );
         const user = data.user;
 
         // Backend trả về user, kiểm tra Chucvu (hoặc Position nếu đã đổi trong Model)
@@ -94,7 +97,8 @@ export default {
 
         this.$router.push("/admin/dashboard");
       } catch (error) {
-        this.serverError = error.response?.data?.message || "Đăng nhập thất bại.";
+        this.serverError =
+          error.response?.data?.message || "Đăng nhập thất bại.";
       }
     },
   },

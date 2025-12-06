@@ -165,7 +165,7 @@
                   <input
                     ref="fileInput"
                     type="file"
-                    accept="image/png, image/jpeg, image/jpg"
+                    accept="image/png, image/jpeg, image/jpg, image/webp"
                     class="d-none"
                     @change="handleFileSelect"
                   />
@@ -336,8 +336,8 @@ export default {
             alert("Kích thước ảnh quá lớn (>2MB).");
             return;
         }
-        if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
-            alert("Chỉ chấp nhận file ảnh (JPG, PNG).");
+        if (!['image/jpeg', 'image/png', 'image/jpg', 'image/webp'].includes(file.type)) {
+            alert("Chỉ chấp nhận file ảnh (JPG, PNG, WEBP).");
             return;
         }
 

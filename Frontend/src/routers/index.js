@@ -62,6 +62,7 @@ const routes = [
     path: "/admin/login",
     name: "AdminLogin",
     component: AdminLogin,
+    meta: {hideHeader: true, hideFooter: true},
   },
   {
     path: "/admin",

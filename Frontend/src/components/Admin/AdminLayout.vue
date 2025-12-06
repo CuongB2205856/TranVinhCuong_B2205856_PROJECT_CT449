@@ -73,30 +73,32 @@ export default {
           to: "/admin/borrowings",
         },
         {
-          title: "Độc Giả & Cảnh Cáo",
-          icon: "mdi-account-alert",
+          title: "Quản Lý Độc Giả",
+          icon: "mdi-account",
           to: "/admin/readers",
         },
-        { 
-          title: "Nhân Sự", 
-          icon: "mdi-account-group", 
+        {
+          title: "Quản Lý Nhân Sự",
+          icon: "mdi-account-group",
           to: "/admin/staffs",
-          role: "Admin" // Đánh dấu mục này chỉ dành cho Admin
+          role: "Admin", // Đánh dấu mục này chỉ dành cho Admin
         },
       ];
 
       // Lọc: Nếu item có yêu cầu role "Admin" mà user hiện tại không phải Admin thì ẩn đi
-      return allItems.filter(item => !item.role || item.role === this.userRole);
-    }
+      return allItems.filter(
+        (item) => !item.role || item.role === this.userRole
+      );
+    },
   },
   created() {
     // 3. Lấy role từ sessionStorage khi component được tạo
     const userStr = sessionStorage.getItem("user");
     if (userStr) {
-        const user = JSON.parse(userStr);
-        this.userRole = user.Chucvu;
+      const user = JSON.parse(userStr);
+      this.userRole = user.Chucvu;
     }
-  }
+  },
 };
 </script>
 
