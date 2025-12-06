@@ -11,7 +11,7 @@ const auth = require('../middlewares/auth');
 router.use(auth.protect);
 
 // 3. Phân quyền: Chỉ Admin mới được thao tác (Tùy chọn, nhưng nên có)
-router.use(auth.restrictTo('Admin')); 
+router.use(auth.restrictTo('Admin', 'Thủ thư')); 
 
 router.route('/')
     .get(publisherController.getAllPublishers)

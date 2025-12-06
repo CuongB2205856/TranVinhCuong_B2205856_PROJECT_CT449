@@ -49,14 +49,36 @@ exports.getAllStaff = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-
-  
 };
 exports.getStats = async (req, res, next) => {
-    try {
-        const stats = await StaffService.getSystemStats();
-        res.status(200).json(stats);
-    } catch (error) {
-        next(error);
-    }
-  };
+  try {
+    const stats = await StaffService.getSystemStats();
+    res.status(200).json(stats);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// --- THÊM MỚI: API Lấy Profile của chính mình ---
+exports.getProfile = async (req, res, next) => {
+  try {
+    // req.user đã có sẵn từ middleware auth
+    // Lấy lại từ DB để đảm bảo dữ liệu mới nhất
+    const staff = await StaffService.getStaffById(req.user._id);
+    res.status(200).json(staff);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// --- THÊM MỚI: API Cập nhật Profile ---
+exports.updateProfile = async (req, res, next) => {
+  try {
+    const updatedStaff = await StaffService.updateStaff(req.user._id, req.body);
+    res
+      .status(200)
+      .json({ message: "Cập nhật hồ sơ thành công.", data: updatedStaff });
+  } catch (error) {
+    next(error);
+  }
+};

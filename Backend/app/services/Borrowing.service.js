@@ -22,7 +22,7 @@ class BorrowingService {
 
     if (reader.TrangThai === "Blocked") {
       throw new Error(
-        `Tài khoản đã bị khóa do vi phạm quá hạn ${reader.SoLanViPham} lần.`
+        `Tài khoản đã bị khóa.`
       );
     }
 

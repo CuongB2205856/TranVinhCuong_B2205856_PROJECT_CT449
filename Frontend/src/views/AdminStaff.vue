@@ -52,17 +52,30 @@
         <v-card-text class="pt-6">
           <v-form ref="form" v-model="valid">
             <v-row>
-              <v-col cols="12" sm="6">
+              
+              <v-col cols="12">
                 <v-text-field
-                  v-model="newItem._id"
-                  label="Mã số NV (MSNV) *"
-                  variant="outlined"
-                  density="compact"
-                  :rules="[v => !!v || 'Bắt buộc']"
-                  hint="Ví dụ: NV001, ADMIN02"
+                v-model="newItem.HoTenNV"
+                label="Họ và Tên *"
+                variant="outlined"
+                density="compact"
+                :rules="[v => !!v || 'Bắt buộc']"
+                prepend-inner-icon="mdi-account"
                 ></v-text-field>
               </v-col>
-              <v-col cols="12" sm="6">
+              
+              <v-col cols="12">
+                <v-text-field
+                v-model="newItem.Password"
+                label="Mật khẩu *"
+                type="password"
+                variant="outlined"
+                density="compact"
+                :rules="[v => !!v || 'Bắt buộc', v => (v && v.length >= 6) || 'Tối thiểu 6 ký tự']"
+                prepend-inner-icon="mdi-lock"
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12">
                 <v-select
                   v-model="newItem.Chucvu"
                   :items="['Admin', 'Thủ thư']"
@@ -70,41 +83,17 @@
                   variant="outlined"
                   density="compact"
                   :rules="[v => !!v || 'Bắt buộc']"
+                  prepend-inner-icon="mdi-badge-account"
                 ></v-select>
               </v-col>
-              <v-col cols="12">
-                <v-text-field
-                  v-model="newItem.HoTenNV"
-                  label="Họ và Tên *"
-                  variant="outlined"
-                  density="compact"
-                  :rules="[v => !!v || 'Bắt buộc']"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12">
-                <v-text-field
-                  v-model="newItem.Password"
-                  label="Mật khẩu *"
-                  type="password"
-                  variant="outlined"
-                  density="compact"
-                  :rules="[v => !!v || 'Bắt buộc', v => (v && v.length >= 6) || 'Tối thiểu 6 ký tự']"
-                ></v-text-field>
-              </v-col>
+              
               <v-col cols="12" sm="6">
                 <v-text-field
                   v-model="newItem.SoDienThoai"
                   label="Số Điện Thoại"
                   variant="outlined"
                   density="compact"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="newItem.Diachi"
-                  label="Địa Chỉ"
-                  variant="outlined"
-                  density="compact"
+                  prepend-inner-icon="mdi-phone"
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -138,11 +127,10 @@ export default {
       
       staffList: [],
       headers: [
-        { title: "MSNV", key: "_id", align: "start" },
+        { title: "MSNV", key: "_id", align: "start" }, // Vẫn hiển thị MSNV trong bảng để Admin biết
         { title: "Họ Tên", key: "HoTenNV" },
         { title: "Chức Vụ", key: "Chucvu" },
         { title: "SĐT", key: "SoDienThoai" },
-        { title: "Địa Chỉ", key: "Diachi" },
       ],
 
       newItem: {
@@ -150,7 +138,6 @@ export default {
         HoTenNV: "",
         Password: "",
         Chucvu: "Thủ thư",
-        Diachi: "",
         SoDienThoai: ""
       },
       defaultItem: {
@@ -158,7 +145,6 @@ export default {
         HoTenNV: "",
         Password: "",
         Chucvu: "Thủ thư",
-        Diachi: "",
         SoDienThoai: ""
       }
     };
@@ -180,8 +166,11 @@ export default {
     
     openDialog() {
       this.newItem = { ...this.defaultItem };
-      // Tự động tạo MSNV gợi ý (NV + timestamp)
-      this.newItem._id = "NV" + Date.now().toString().slice(-4);
+      
+      // Tự động tạo MSNV ngẫu nhiên (Ví dụ: NV1701234567)
+      // Sử dụng Date.now() để đảm bảo không trùng lặp
+      this.newItem._id = "NV" + Date.now().toString(); 
+      
       this.dialog = true;
     },
 
@@ -198,7 +187,7 @@ export default {
       this.error = null;
       try {
         await StaffService.createStaff(this.newItem);
-        this.success = "Thêm nhân viên thành công!";
+        this.success = `Thêm nhân viên thành công! Mã số: ${this.newItem._id}`;
         this.fetchStaffs();
         this.closeDialog();
       } catch (err) {

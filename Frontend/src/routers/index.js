@@ -15,6 +15,7 @@ import AdminPublisher from "../views/AdminPublisher.vue"; // Component NXB
 import AdminStats from "../views/AdminStats.vue";
 import NotFound from "../views/NotFound.vue";
 import AdminStaff from "../views/AdminStaff.vue"; // Component Nhân viên
+import AdminProfile from "../views/AdminProfile.vue"; // Component Hồ sơ nhân sự
 
 const routes = [
   {
@@ -55,7 +56,7 @@ const routes = [
       }
     },
   },
-  
+
   // --- ADMIN AREA ---
   {
     path: "/admin/login",
@@ -65,7 +66,7 @@ const routes = [
   {
     path: "/admin",
     component: AdminLayout,
-    meta: { requiresAuth: true, roles: ["Admin"] }, // Bảo mật cấp cha
+    meta: { requiresAuth: true, roles: ["Admin", "Thủ thư"] }, // Bảo mật cấp cha
     children: [
       {
         path: "",
@@ -91,13 +92,24 @@ const routes = [
         name: "AdminBorrowings",
         component: () => import("../views/AdminBorrowing.vue"),
       },
+      {
+        path: "readers",
+        name: "AdminReaders",
+        component: () => import("../views/AdminReader.vue"),
+      },
       // 2. THÊM ROUTE NHÂN VIÊN VÀO ĐÂY
       {
-        path: "staffs", 
+        path: "staffs",
         name: "AdminStaffs",
         component: AdminStaff,
         // Route này tự động được bảo mật nhờ settings của route cha "/admin"
         // Chỉ Admin mới truy cập được.
+      },
+      // Thêm vào children của route /admin
+      {
+        path: "profile",
+        name: "AdminProfile",
+        component: () => import("../views/AdminProfile.vue"),
       },
     ],
   },

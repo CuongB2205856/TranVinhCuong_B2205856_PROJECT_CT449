@@ -31,6 +31,10 @@ const StaffSchema = new mongoose.Schema(
       type: String,
       unique: true,
     },
+    HinhAnh: {
+      type: String,
+      default: "https://res.cloudinary.com/dquwesxem/image/upload/v1765020465/3607444_xaitxz.png",
+    },
   },
   {
     versionKey: false,

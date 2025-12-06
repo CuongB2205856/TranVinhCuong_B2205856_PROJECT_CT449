@@ -41,7 +41,7 @@ const ReaderSchema = new mongoose.Schema(
     },
     HinhAnh: {
       type: String,
-      default: "",
+      default: "https://res.cloudinary.com/dquwesxem/image/upload/v1765020465/3607444_xaitxz.png",
     },
     SoLanViPham: {
         type: Number,
