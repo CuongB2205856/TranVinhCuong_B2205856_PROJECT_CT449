@@ -1,10 +1,10 @@
 <template>
   <v-container class="max-w-7xl mx-auto py-12">
     <div class="d-flex justify-space-between align-center mb-6">
-      <h2 class="text-3xl font-weight-bold text-red-darken-3">
+      <h2 class="text-3xl font-weight-bold text-black">
         Quản Lý Kho Sách
       </h2>
-      <v-btn color="primary" prepend-icon="mdi-plus" @click="openDialog">
+      <v-btn color="black" prepend-icon="mdi-plus" @click="openDialog" class="text-white">
         Thêm Sách Mới
       </v-btn>
     </div>
@@ -16,7 +16,7 @@
       :headers="headers"
       :items="allBooks"
       :loading="isLoading"
-      class="elevation-4 rounded-lg"
+      class="elevation-2 rounded-lg border"
       :search="search"
       item-value="_id" 
     >
@@ -29,6 +29,7 @@
           density="compact"
           class="pa-4"
           hide-details
+          color="black"
         ></v-text-field>
       </template>
 
@@ -47,7 +48,7 @@
       </template>
 
       <template v-slot:item.SoQuyen="{ item }">
-        <v-chip :color="item.SoQuyen > 0 ? 'green' : 'red'" class="font-weight-bold text-white" size="small">
+        <v-chip :color="item.SoQuyen > 0 ? 'black' : 'red'" variant="outlined" class="font-weight-bold" size="small">
           {{ item.SoQuyen }}
         </v-chip>
       </template>
@@ -57,10 +58,10 @@
       </template>
 
       <template v-slot:item.actions="{ item }">
-        <v-icon size="small" class="mr-2 text-blue-500" @click="editItem(item)">
+        <v-icon size="small" class="mr-2 text-black" @click="editItem(item)">
           mdi-pencil
         </v-icon>
-        <v-icon size="small" class="text-red-500" @click="deleteItem(item)">
+        <v-icon size="small" class="text-grey-darken-1" @click="deleteItem(item)">
           mdi-delete
         </v-icon>
       </template>
@@ -68,7 +69,7 @@
 
     <v-dialog v-model="dialog" max-width="900px" persistent>
         <v-card>
-        <v-card-title class="bg-primary text-white pa-4">
+        <v-card-title class="bg-black text-white pa-4">
           <span class="text-h5">{{ formTitle }}</span>
         </v-card-title>
 
@@ -85,9 +86,10 @@
                       density="compact"
                       prepend-inner-icon="mdi-book-open-variant"
                       :rules="[rules.required]"
+                      color="black"
                     ></v-text-field>
                   </v-col>
-
+                  
                   <v-col cols="12" sm="6">
                     <v-text-field
                       v-model="editedItem.TacGia"
@@ -96,6 +98,7 @@
                       density="compact"
                       prepend-inner-icon="mdi-account-edit"
                       :rules="[rules.required]"
+                      color="black"
                     ></v-text-field>
                   </v-col>
 
@@ -113,6 +116,7 @@
                       :rules="[rules.requiredObject]"
                       @update:modelValue="onPublisherChange"
                       no-data-text="Không tìm thấy NXB"
+                      color="black"
                     ></v-autocomplete>
                   </v-col>
 
@@ -123,6 +127,7 @@
                       type="number"
                       variant="outlined"
                       density="compact"
+                      color="black"
                     ></v-text-field>
                   </v-col>
 
@@ -134,6 +139,7 @@
                       variant="outlined"
                       density="compact"
                       min="0"
+                      color="black"
                     ></v-text-field>
                   </v-col>
 
@@ -145,6 +151,7 @@
                       variant="outlined"
                       density="compact"
                       suffix="VND"
+                      color="black"
                     ></v-text-field>
                   </v-col>
                 </v-row>
@@ -171,7 +178,7 @@
                   />
 
                   <v-btn 
-                    color="primary" 
+                    color="black" 
                     variant="outlined" 
                     prepend-icon="mdi-camera"
                     @click="$refs.fileInput.click()"
@@ -192,7 +199,7 @@
         <v-card-actions class="pa-4 border-t">
           <v-spacer></v-spacer>
           <v-btn color="grey-darken-1" variant="text" @click="close">Hủy</v-btn>
-          <v-btn color="primary" variant="elevated" @click="save" :loading="isSaving">Lưu</v-btn>
+          <v-btn color="black" variant="elevated" @click="save" :loading="isSaving" class="text-white">Lưu</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -204,7 +211,7 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="grey" variant="text" @click="closeDelete">Hủy</v-btn>
-          <v-btn color="red" variant="elevated" @click="deleteItemConfirm">Xóa</v-btn>
+          <v-btn color="black" variant="elevated" @click="deleteItemConfirm" class="text-white">Xóa</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -213,12 +220,14 @@
 </template>
 
 <script>
+// (Giữ nguyên phần script logic, chỉ thay đổi template ở trên)
 import BookService from "@/services/Book.service";
 import PublisherService from "@/services/Publisher.service"; 
 import axios from "axios"; 
 
 export default {
   name: "AdminCatalog",
+  // ... (Phần Data, Methods giữ nguyên như cũ)
   data: () => ({
     CLOUDINARY_NAME: import.meta.env.VITE_CLOUDINARY_NAME,
     CLOUDINARY_PRESET: import.meta.env.VITE_CLOUDINARY_PRESET,
@@ -295,12 +304,10 @@ export default {
         return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
     },
 
-    // --- HÀM initData ĐÃ ĐƯỢC SỬA LẠI ---
     async initData() {
         this.isLoading = true;
         this.error = null;
         try {
-            // Tách Promise để lỗi NXB không chặn việc hiển thị sách
             const booksPromise = BookService.getAllBooksAdmin().catch(e => {
                 console.error("Lỗi tải sách:", e);
                 this.error = "Không thể tải danh sách sách.";
@@ -308,8 +315,7 @@ export default {
             });
             
             const publishersPromise = PublisherService.getAllPublishers().catch(e => {
-                console.error("Lỗi tải NXB (có thể do chưa tạo NXB hoặc lỗi route):", e);
-                // Không set error ở đây để tránh che mất danh sách sách
+                console.error("Lỗi tải NXB:", e);
                 return [];
             });
 
@@ -380,18 +386,15 @@ export default {
     },
 
     editItem(item) {
-      // SỬA: Tìm index bằng ID thay vì object reference
       this.editedIndex = this.allBooks.findIndex(b => b._id === item._id);
       this.editedItem = JSON.parse(JSON.stringify(item));
       
       this.selectedFile = null;
       this.previewImage = null;
 
-      // SỬA: Logic map NXB an toàn hơn
       const maNXB = item.NXB?.MaNXB;
       if (maNXB) {
           this.selectedPublisher = this.publishers.find(p => p._id === maNXB) || null;
-          // Fallback: Nếu không tìm thấy trong list (VD: NXB bị xóa), vẫn hiện tên cũ
           if (!this.selectedPublisher && item.NXB.TenNXB) {
                this.selectedPublisher = { _id: maNXB, TenNXB: item.NXB.TenNXB };
           }

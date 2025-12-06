@@ -43,6 +43,7 @@
                 </Field>
 
                 <v-btn 
+                    block
                     type="submit" 
                     color="black" 
                     class="text-white w-full mt-2 font-bold" 
@@ -95,18 +96,35 @@ export default {
             this.isLoading = true;
             this.serverError = "";
             try {
-                const { token, user } = await AuthService.loginReader(values.phone, values.password);
+                const response = await AuthService.loginReader(values.phone, values.password);
+                
+                const token = response.token;
+                const user = response.data ? response.data.user : null;
+
+                if (!user) {
+                    throw new Error("Dữ liệu người dùng không hợp lệ.");
+                }
 
                 sessionStorage.setItem('token', token);
                 sessionStorage.setItem('user', JSON.stringify(user));
 
+                // 1. Cập nhật Header
                 window.dispatchEvent(new Event('storage'));
 
-                alert('Đăng nhập thành công!');
+                // 2. [THAY ĐỔI] Gọi sự kiện hiển thị thông báo thay vì alert
+                window.dispatchEvent(new CustomEvent('show-notification', {
+                    detail: {
+                        message: 'Đăng nhập thành công!',
+                        color: 'success', // Màu xanh lá mặc định của success trong theme
+                        icon: 'mdi-check-circle'
+                    }
+                }));
+
+                // 3. Chuyển hướng
                 this.$router.push('/');
             } catch (error) {
                 console.error('Lỗi đăng nhập:', error);
-                this.serverError = error.response?.data?.message || 'Sai số điện thoại hoặc mật khẩu';
+                this.serverError = error.response?.data?.message || error.message || 'Sai số điện thoại hoặc mật khẩu';
             } finally {
                 this.isLoading = false;
             }

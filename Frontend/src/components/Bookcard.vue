@@ -4,7 +4,6 @@
         elevation="0"
     >
         <div class="pa-4">
-            <!-- book.anh_bia là URL ảnh từ Cloudinary, hoặc placeholder -->
             <v-img 
                 :src="book.anh_bia || 'https://placehold.co/300x450/cccccc/333333?text=No+Cover'" 
                 height="280" 
@@ -27,18 +26,19 @@
             <div class="text-xs">NXB: {{ book.NXB?.TenNXB || 'Không rõ' }} ({{ book.NamXuatBan }})</div>
         </v-card-text>
 
-        <v-card-actions class="px-4 py-2 bg-gray-50 border-t border-gray-200">
-            <!-- Gắn link router tới trang chi tiết sách -->
-            <router-link :to="`/books/${book._id}`" class="text-decoration-none">
-                <v-btn variant="elevated" color="#5865f2" class="font-weight-medium rounded-lg transition-colors text-white">
-                    Chi tiết
+        <v-card-actions class="px-4 py-3 bg-gray-50 border-t border-gray-200">
+            <router-link :to="`/books/${book._id}`" class="text-decoration-none w-100">
+                <v-btn 
+                    block 
+                    variant="flat" 
+                    color="#5865f2" 
+                    class="text-white font-weight-bold rounded-lg text-capitalize"
+                    elevation="2"
+                    height="40"
+                >
+                    Xem Chi Tiết
                 </v-btn>
             </router-link>
-            <v-spacer></v-spacer>
-            <!-- Nút mượn sách (sẽ được thêm logic sau) -->
-            <v-btn variant="outlined" color="success" :disabled="book.SoQuyen <= 0">
-                Mượn
-            </v-btn>
         </v-card-actions>
     </v-card>
 </template>
@@ -50,7 +50,6 @@ export default {
         book: {
             type: Object,
             required: true,
-            // Định nghĩa các trường dữ liệu theo Backend Model
             validator: (value) => {
                 return value.TenSach !== undefined && value.SoQuyen !== undefined;
             }

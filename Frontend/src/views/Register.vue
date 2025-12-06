@@ -78,6 +78,7 @@
                 </Field>
 
                 <v-btn 
+                    block
                     type="submit" 
                     color="black" 
                     class="text-white w-full mt-4 font-bold" 

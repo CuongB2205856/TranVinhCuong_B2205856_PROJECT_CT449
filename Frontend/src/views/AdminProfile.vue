@@ -1,73 +1,136 @@
 <template>
   <v-container class="max-w-4xl mx-auto py-10">
-    <v-card class="rounded-xl shadow-lg" elevation="10">
-        <v-toolbar color="red-darken-3" dark>
-             <v-toolbar-title>Hồ Sơ Nhân Sự</v-toolbar-title>
-        </v-toolbar>
+    <div class="mb-6">
+      <h2 class="text-3xl font-bold text-black">Hồ Sơ Cá Nhân</h2>
+      <p class="text-grey-darken-1">Quản lý thông tin và bảo mật tài khoản</p>
+    </div>
 
-        <v-tabs v-model="activeTab" color="red-darken-3" align-tabs="center">
-            <v-tab value="info" prepend-icon="mdi-account-box">Thông tin chung</v-tab>
-            <v-tab value="password" prepend-icon="mdi-lock">Đổi mật khẩu</v-tab>
+    <v-card class="rounded-xl border" elevation="2">
+        <v-tabs v-model="activeTab" color="black" align-tabs="start" class="border-b px-4">
+            <v-tab value="info" class="text-capitalize font-weight-bold" prepend-icon="mdi-account-box-outline">Thông tin chung</v-tab>
+            <v-tab value="password" class="text-capitalize font-weight-bold" prepend-icon="mdi-lock-outline">Đổi mật khẩu</v-tab>
         </v-tabs>
 
-        <v-card-text class="pa-6">
+        <v-card-text class="pa-8">
             <v-window v-model="activeTab">
                 
                 <v-window-item value="info">
-                    <div class="d-flex flex-column align-center mb-6">
-                        <div class="position-relative">
-                            <v-avatar color="grey-lighten-2" size="120" class="elevation-4 border">
-                                <v-img v-if="staffData.HinhAnh" :src="staffData.HinhAnh" cover></v-img>
-                                <span v-else class="text-h3 font-weight-bold text-red-darken-3">
-                                    {{ getInitials(staffData.HoTenNV) }}
-                                </span>
-                            </v-avatar>
-                            
-                            <v-btn
-                                icon="mdi-camera"
-                                size="small"
-                                color="red-darken-3"
-                                class="avatar-edit-btn"
-                                @click="$refs.fileInput.click()"
-                                :loading="isUploading"
-                            ></v-btn>
-                            
-                            <input ref="fileInput" type="file" accept="image/*" class="d-none" @change="handleFileUpload" />
-                        </div>
-                        <h2 class="text-2xl font-bold mt-4">{{ staffData.HoTenNV }}</h2>
-                        <v-chip color="red" size="small" class="mt-1">{{ staffData.Chucvu }}</v-chip>
-                    </div>
+                    <v-row>
+                        <v-col cols="12" md="4" class="d-flex flex-column align-center">
+                            <div class="position-relative mb-4">
+                                <v-avatar color="grey-lighten-4" size="160" class="elevation-2 border">
+                                    <v-img v-if="staffData.HinhAnh" :src="staffData.HinhAnh" cover></v-img>
+                                    <span v-else class="text-h2 font-weight-bold text-grey-darken-2">
+                                        {{ getInitials(staffData.HoTenNV) }}
+                                    </span>
+                                </v-avatar>
+                                
+                                <v-btn
+                                    icon="mdi-camera"
+                                    size="small"
+                                    color="black"
+                                    class="avatar-edit-btn text-white elevation-3"
+                                    @click="$refs.fileInput.click()"
+                                    :loading="isUploading"
+                                ></v-btn>
+                                
+                                <input ref="fileInput" type="file" accept="image/*" class="d-none" @change="handleFileUpload" />
+                            </div>
+                            <h3 class="text-xl font-bold">{{ staffData.HoTenNV }}</h3>
+                            <v-chip color="black" variant="outlined" size="small" class="mt-2 font-weight-medium text-uppercase">
+                                {{ staffData.Chucvu }}
+                            </v-chip>
+                        </v-col>
 
-                    <v-form ref="formInfo" @submit.prevent="submitUpdateInfo">
-                        <v-row>
-                            <v-col cols="12" md="6">
-                                <v-text-field v-model="staffData._id" label="Mã Số Nhân Viên (MSNV)" variant="outlined" readonly disabled prepend-inner-icon="mdi-identifier"></v-text-field>
-                            </v-col>
-                            <v-col cols="12" md="6">
-                                <v-text-field v-model="staffData.HoTenNV" label="Họ và Tên" variant="outlined" color="red-darken-3" prepend-inner-icon="mdi-account"></v-text-field>
-                            </v-col>
-                            <v-col cols="12" md="6">
-                                <v-text-field v-model="staffData.SoDienThoai" label="Số Điện Thoại" variant="outlined" color="red-darken-3" prepend-inner-icon="mdi-phone"></v-text-field>
-                            </v-col>
-                            <v-col cols="12" md="6">
-                                <v-text-field v-model="staffData.Diachi" label="Địa Chỉ" variant="outlined" color="red-darken-3" prepend-inner-icon="mdi-map-marker"></v-text-field>
-                            </v-col>
-                        </v-row>
-                        <div class="d-flex justify-end mt-4">
-                             <v-btn type="submit" color="red-darken-3" size="large" :loading="isLoading" prepend-icon="mdi-content-save">Lưu Thay Đổi</v-btn>
-                        </div>
-                    </v-form>
+                        <v-col cols="12" md="8">
+                            <v-form ref="formInfo" @submit.prevent="submitUpdateInfo">
+                                <v-row>
+                                    <v-col cols="12">
+                                        <v-text-field 
+                                            v-model="staffData._id" 
+                                            label="Mã Nhân Viên" 
+                                            variant="outlined" 
+                                            readonly disabled 
+                                            bg-color="grey-lighten-4"
+                                            prepend-inner-icon="mdi-identifier"
+                                            class="mt-2"
+                                        ></v-text-field>
+                                    </v-col>
+                                    <v-col cols="12">
+                                        <v-text-field 
+                                            v-model="staffData.HoTenNV" 
+                                            label="Họ và Tên" 
+                                            variant="outlined" 
+                                            density="comfortable"
+                                            color="black" 
+                                            prepend-inner-icon="mdi-account-outline"
+                                        ></v-text-field>
+                                    </v-col>
+                                    <v-col cols="12" sm="6">
+                                        <v-text-field 
+                                            v-model="staffData.SoDienThoai" 
+                                            label="Số Điện Thoại" 
+                                            variant="outlined" 
+                                            density="comfortable"
+                                            color="black" 
+                                            prepend-inner-icon="mdi-phone-outline"
+                                        ></v-text-field>
+                                    </v-col>
+                                    
+                                    <v-col cols="12" sm="6">
+                                        <v-autocomplete 
+                                            v-model="staffData.Diachi" 
+                                            :items="provinces"
+                                            item-title="name"
+                                            item-value="name"
+                                            label="Địa Chỉ (Tỉnh/Thành)" 
+                                            variant="outlined" 
+                                            density="comfortable"
+                                            color="black" 
+                                            prepend-inner-icon="mdi-map-marker-outline"
+                                            :loading="loadingProvinces"
+                                            no-data-text="Không có dữ liệu"
+                                            clearable
+                                            placeholder="Chọn tỉnh thành..."
+                                        ></v-autocomplete>
+                                    </v-col>
+                                </v-row>
+                                <div class="d-flex justify-end mt-6">
+                                     <v-btn type="submit" color="black" size="large" class="text-white px-6" elevation="2" :loading="isLoading" prepend-icon="mdi-content-save">Lưu Thay Đổi</v-btn>
+                                </div>
+                            </v-form>
+                        </v-col>
+                    </v-row>
                 </v-window-item>
 
                 <v-window-item value="password">
-                     <v-form ref="formPwd" @submit.prevent="submitChangePassword">
-                        <v-text-field v-model="pwd.newPassword" label="Mật khẩu mới" type="password" variant="outlined" color="red-darken-3" class="mb-2"></v-text-field>
-                        <v-text-field v-model="pwd.confirmPassword" label="Nhập lại mật khẩu mới" type="password" variant="outlined" color="red-darken-3"></v-text-field>
-                        
-                        <div class="d-flex justify-end mt-4">
-                             <v-btn type="submit" color="red-darken-3" :loading="isLoading">Đổi Mật Khẩu</v-btn>
-                        </div>
-                    </v-form>
+                    <div class="max-w-md mx-auto py-4">
+                         <v-form ref="formPwd" @submit.prevent="submitChangePassword">
+                            <v-text-field 
+                                v-model="pwd.newPassword" 
+                                label="Mật khẩu mới" 
+                                type="password" 
+                                variant="outlined" 
+                                color="black" 
+                                density="comfortable"
+                                prepend-inner-icon="mdi-lock-outline"
+                                class="mb-2"
+                            ></v-text-field>
+                            <v-text-field 
+                                v-model="pwd.confirmPassword" 
+                                label="Nhập lại mật khẩu mới" 
+                                type="password" 
+                                variant="outlined" 
+                                color="black" 
+                                density="comfortable"
+                                prepend-inner-icon="mdi-lock-check-outline"
+                            ></v-text-field>
+                            
+                            <div class="d-flex justify-end mt-6">
+                                 <v-btn type="submit" color="black" class="text-white" size="large" block :loading="isLoading">Đổi Mật Khẩu</v-btn>
+                            </div>
+                        </v-form>
+                    </div>
                 </v-window-item>
             </v-window>
         </v-card-text>
@@ -92,18 +155,37 @@ export default {
             isUploading: false,
             staffData: { _id: '', HoTenNV: '', SoDienThoai: '', Diachi: '', Chucvu: '', HinhAnh: '' },
             pwd: { newPassword: '', confirmPassword: '' },
-            snackbar: { show: false, message: '', color: 'success' },
+            snackbar: { show: false, message: '', color: 'black' },
             CLOUDINARY_NAME: import.meta.env.VITE_CLOUDINARY_NAME,
             CLOUDINARY_PRESET: import.meta.env.VITE_CLOUDINARY_PRESET,
+            
+            // [THÊM MỚI] Dữ liệu tỉnh thành
+            provinces: [],
+            loadingProvinces: false,
         }
     },
     methods: {
         getInitials(name) { return name ? name.charAt(0).toUpperCase() : 'A'; },
+        
         async fetchProfile() {
             try {
                 this.staffData = await StaffService.getProfile();
             } catch(e) { console.error(e); }
         },
+
+        // [THÊM MỚI] Hàm lấy danh sách tỉnh
+        async fetchProvinces() {
+            this.loadingProvinces = true;
+            try {
+                const res = await axios.get("https://provinces.open-api.vn/api/?depth=1");
+                this.provinces = res.data; 
+            } catch (e) {
+                console.error("Lỗi tải tỉnh thành:", e);
+            } finally {
+                this.loadingProvinces = false;
+            }
+        },
+
         async handleFileUpload(event) {
             const file = event.target.files[0];
             if(!file) return;
@@ -114,12 +196,10 @@ export default {
                 formData.append("upload_preset", this.CLOUDINARY_PRESET);
                 const res = await axios.post(`https://api.cloudinary.com/v1_1/${this.CLOUDINARY_NAME}/image/upload`, formData);
                 
-                // Cập nhật ngay vào DB
                 const imgUrl = res.data.secure_url;
                 await StaffService.updateProfile({ HinhAnh: imgUrl });
                 this.staffData.HinhAnh = imgUrl;
                 
-                // Cập nhật sessionStorage để Header nhận diện ngay
                 const user = JSON.parse(sessionStorage.getItem('user'));
                 user.HinhAnh = imgUrl;
                 sessionStorage.setItem('user', JSON.stringify(user));
@@ -132,7 +212,6 @@ export default {
             this.isLoading = true;
             try {
                 await StaffService.updateProfile(this.staffData);
-                // Cập nhật sessionStorage
                 const user = JSON.parse(sessionStorage.getItem('user'));
                 user.HoTenNV = this.staffData.HoTenNV;
                 sessionStorage.setItem('user', JSON.stringify(user));
@@ -153,13 +232,18 @@ export default {
             } catch(e) { this.showMsg("Lỗi đổi mật khẩu", "error"); }
             finally { this.isLoading = false; }
         },
-        showMsg(msg, color) { this.snackbar = { show: true, message: msg, color }; }
+        showMsg(msg, color) { 
+            this.snackbar = { show: true, message: msg, color: color === 'error' ? 'red-darken-3' : 'black' }; 
+        }
     },
-    created() { this.fetchProfile(); }
+    created() { 
+        this.fetchProfile(); 
+        this.fetchProvinces(); // [THÊM MỚI] Gọi API tỉnh khi khởi tạo
+    }
 }
 </script>
 
 <style scoped>
-.avatar-edit-btn { position: absolute; bottom: 0; right: 0; border: 2px solid white; }
+.avatar-edit-btn { position: absolute; bottom: 5px; right: 5px; border: 3px solid white; }
 .position-relative { position: relative; display: inline-block; }
 </style>

@@ -1,15 +1,15 @@
 <template>
   <v-container class="max-w-7xl mx-auto py-12">
     <div class="d-flex justify-space-between align-center mb-6">
-      <h2 class="text-3xl font-weight-bold text-red-darken-3">
+      <h2 class="text-3xl font-bold text-black">
         Quản Lý Độc Giả
       </h2>
-      <v-btn color="primary" variant="outlined" prepend-icon="mdi-refresh" @click="fetchReaders">
+      <v-btn color="black" variant="outlined" prepend-icon="mdi-refresh" @click="fetchReaders">
         Làm mới
       </v-btn>
     </div>
 
-    <v-card class="elevation-4 rounded-lg">
+    <v-card class="elevation-2 rounded-lg border">
       <v-data-table
         :headers="headers"
         :items="readers"
@@ -26,6 +26,7 @@
             density="compact"
             class="pa-4"
             hide-details
+            color="black"
           ></v-text-field>
         </template>
 
@@ -45,9 +46,10 @@
 
         <template v-slot:item.TrangThai="{ item }">
           <v-chip
-            :color="item.TrangThai === 'Blocked' ? 'red' : 'green'"
-            variant="elevated"
+            :color="item.TrangThai === 'Blocked' ? 'black' : 'green'"
+            variant="flat"
             size="small"
+            class="text-white"
           >
             <v-icon start size="small">
                 {{ item.TrangThai === 'Blocked' ? 'mdi-lock' : 'mdi-check-circle' }}
@@ -59,7 +61,7 @@
         <template v-slot:item.actions="{ item }">
           <v-btn 
             size="small" 
-            color="primary" 
+            color="black" 
             variant="text" 
             icon="mdi-shield-edit"
             @click="openEditDialog(item)"
@@ -71,7 +73,7 @@
 
     <v-dialog v-model="dialog" max-width="500px">
       <v-card class="rounded-lg">
-        <v-card-title class="bg-red-darken-3 text-white pa-4 font-weight-bold">
+        <v-card-title class="bg-black text-white pa-4 font-weight-bold">
           <v-icon class="mr-2">mdi-account-cog</v-icon> Quản Lý Trạng Thái
         </v-card-title>
         
@@ -96,6 +98,7 @@
                     variant="tonal"
                     density="compact"
                     icon="mdi-alert-circle"
+                    color="orange-darken-2"
                    >
                      Số lần vi phạm hiện tại: <strong>{{ editedItem.SoLanViPham }}</strong>
                    </v-alert>
@@ -108,7 +111,7 @@
                         label="Trạng thái tài khoản"
                         variant="outlined"
                         prepend-inner-icon="mdi-shield-account"
-                        :color="editedItem.TrangThai === 'Blocked' ? 'red' : 'green'"
+                        color="black"
                     >
                         <template v-slot:selection="{ item }">
                             <span :class="item.raw === 'Blocked' ? 'text-red font-weight-bold' : 'text-green font-weight-bold'">
@@ -123,7 +126,7 @@
         <v-card-actions class="pa-4 border-t bg-grey-lighten-4">
             <v-spacer></v-spacer>
             <v-btn color="grey-darken-1" variant="text" @click="dialog = false">Đóng</v-btn>
-            <v-btn color="red-darken-3" variant="elevated" @click="saveReader" :loading="isSaving">Lưu Trạng Thái</v-btn>
+            <v-btn color="black" variant="elevated" @click="saveReader" :loading="isSaving" class="text-white">Lưu Trạng Thái</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -132,7 +135,7 @@
 </template>
 
 <script>
-import ReaderService from "@/services/Reader.service";
+import ReaderService from "@/services/Reader.service"; //
 
 export default {
   name: "AdminReader",
@@ -178,7 +181,6 @@ export default {
     },
 
     openEditDialog(item) {
-        // Clone item để không ảnh hưởng dữ liệu bảng khi chưa lưu
         this.editedItem = { ...item };
         this.dialog = true;
     },
@@ -186,18 +188,11 @@ export default {
     async saveReader() {
         this.isSaving = true;
         try {
-            // THAY ĐỔI: Chỉ gửi TrangThai lên server
             await ReaderService.updateReader(this.editedItem._id, {
                 TrangThai: this.editedItem.TrangThai
-                // Không gửi SoLanViPham nữa
             });
-            
-            // Cập nhật giao diện (Thủ công hoặc gọi lại API)
-            // Cách nhanh: gọi lại API
             await this.fetchReaders();
-            
             this.dialog = false;
-            // Dùng alert hoặc snackbar nếu bạn có cấu hình snackbar global
             alert("Cập nhật trạng thái thành công!");
         } catch (error) {
             alert("Cập nhật thất bại: " + (error.response?.data?.message || "Lỗi hệ thống"));

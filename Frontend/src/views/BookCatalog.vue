@@ -4,7 +4,6 @@
       Danh Mục Sách Thư Viện
     </h1>
 
-    <!-- Header với tìm kiếm -->
     <v-row class="mb-8 items-center">
       <v-col cols="12" md="8" offset-md="2">
         <v-text-field
@@ -20,7 +19,6 @@
       </v-col>
     </v-row>
 
-    <!-- Trạng thái tải -->
     <v-row v-if="isLoading">
       <v-col cols="12" class="text-center">
         <v-progress-circular
@@ -32,7 +30,6 @@
       </v-col>
     </v-row>
 
-    <!-- Danh sách sách -->
     <v-row v-else>
       <v-col v-if="filteredBooks.length === 0" cols="12">
         <v-alert type="info" icon="mdi-information-outline">
@@ -52,7 +49,6 @@
       </v-col>
     </v-row>
 
-    <!-- Phân trang -->
     <v-row v-if="totalPages > 1" class="mt-10">
       <v-col cols="12" class="flex justify-center">
         <v-pagination
@@ -62,7 +58,6 @@
           density="comfortable"
           rounded="circle"
           active-color="#5865f2"
-          @update:modelValue="filterBooks"
         ></v-pagination>
       </v-col>
     </v-row>
@@ -70,7 +65,6 @@
 </template>
 
 <script>
-// Đổi tên import
 import BookService from "@/services/Book.service";
 import BookCard from "@/components/Bookcard.vue";
 
@@ -91,6 +85,7 @@ export default {
     totalPages() {
       return Math.ceil(this.filteredBooks.length / this.itemsPerPage);
     },
+    // Computed này tự động chạy lại khi currentPage thay đổi (do v-model)
     paginatedBooks() {
       const start = (this.currentPage - 1) * this.itemsPerPage;
       const end = start + this.itemsPerPage;
@@ -98,6 +93,7 @@ export default {
     },
   },
   methods: {
+    // Hàm này chỉ nên chạy khi người dùng gõ tìm kiếm
     filterBooks() {
       let filtered = this.allBooks;
       if (this.searchQuery) {
@@ -109,13 +105,13 @@ export default {
         );
       }
       this.filteredBooks = filtered;
-      this.currentPage = 1;
+      // Reset về trang 1 khi tìm kiếm là đúng logic
+      this.currentPage = 1; 
     },
 
     async fetchBooks() {
       this.isLoading = true;
       try {
-        // SỬA: Gọi hàm getAllBooks() mới
         const data = await BookService.getAllBooks();
         this.allBooks = data;
         this.filteredBooks = data;
@@ -133,7 +129,6 @@ export default {
 </script>
 
 <style scoped>
-/* Vuetify sử dụng Tailwind CSS, nên không cần CSS quá phức tạp */
 .v-container {
   padding: 3rem 1.5rem;
 }

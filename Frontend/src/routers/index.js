@@ -98,15 +98,11 @@ const routes = [
         name: "AdminReaders",
         component: () => import("../views/AdminReader.vue"),
       },
-      // 2. THÊM ROUTE NHÂN VIÊN VÀO ĐÂY
       {
         path: "staffs",
         name: "AdminStaffs",
         component: AdminStaff,
-        // Route này tự động được bảo mật nhờ settings của route cha "/admin"
-        // Chỉ Admin mới truy cập được.
       },
-      // Thêm vào children của route /admin
       {
         path: "profile",
         name: "AdminProfile",
@@ -126,44 +122,54 @@ const router = createRouter({
   routes,
 });
 
-// --- PHẦN QUAN TRỌNG: NAVIGATION GUARD ---
+// --- PHẦN QUAN TRỌNG: NAVIGATION GUARD (ĐÃ SỬA LỖI CRASH JSON) ---
 router.beforeEach((to, from, next) => {
   // 1. Lấy thông tin đăng nhập từ sessionStorage
   const token = sessionStorage.getItem("token");
   const userStr = sessionStorage.getItem("user");
-  const user = userStr ? JSON.parse(userStr) : null;
+  
+  // [FIX LỖI] Sử dụng try-catch để parse JSON an toàn
+  let user = null;
+  try {
+      if (userStr && userStr !== "undefined") {
+          user = JSON.parse(userStr);
+      }
+  } catch (e) {
+      console.warn("Dữ liệu user bị lỗi, tiến hành reset session:", e);
+      sessionStorage.removeItem("user");
+      sessionStorage.removeItem("token");
+      // Nếu dữ liệu lỗi, coi như chưa đăng nhập
+      user = null;
+  }
 
   // 2. Kiểm tra nếu route yêu cầu đăng nhập
   if (to.meta.requiresAuth && !token) {
-    // Nếu là route admin -> Chuyển về Admin Login
     if (to.path.startsWith("/admin")) {
       return next("/admin/login");
     }
-    // Route thường -> Chuyển về Login độc giả
     return next("/login");
   }
 
   // 3. Kiểm tra quyền (Roles) cho Admin
   if (to.meta.requiresAuth && user) {
-    // Xác định vai trò hiện tại (Staff có Chucvu, Reader thì không)
     const userRole = user.Chucvu || "Reader";
 
     if (to.meta.roles && !to.meta.roles.includes(userRole)) {
-      // Đã đăng nhập nhưng không đủ quyền (VD: Độc giả vào trang Admin)
       alert("Bạn không có quyền truy cập trang này!");
-      return next("/"); // Quay về trang chủ
+      return next("/");
     }
   }
 
-  // 4. (Tuỳ chọn) Chặn người đã đăng nhập quay lại trang Login/Register
+  // 4. Chặn người đã đăng nhập quay lại trang Login/Register
   if (
-    token &&
+    token && user &&
     (to.path === "/login" ||
       to.path === "/register" ||
       to.path === "/admin/login")
   ) {
-    if (to.path.includes("admin") && !user.Chucvu) return next(); // Độc giả muốn vào admin login thì cho qua
-    return next("/"); // Còn lại về trang chủ
+    if (to.path.includes("admin") && !user.Chucvu) return next();
+    if (user.Chucvu) return next("/admin/dashboard");
+    return next("/");
   }
 
   next();

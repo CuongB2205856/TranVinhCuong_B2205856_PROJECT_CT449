@@ -1,10 +1,10 @@
 <template>
   <v-container class="max-w-7xl mx-auto py-12">
     <div class="d-flex justify-space-between align-center mb-6">
-      <h2 class="text-3xl font-weight-bold text-red-darken-3">
+      <h2 class="text-3xl font-weight-bold text-black">
         Quản Lý Nhà Xuất Bản
       </h2>
-      <v-btn color="primary" prepend-icon="mdi-plus" @click="openDialog">
+      <v-btn color="black" prepend-icon="mdi-plus" @click="openDialog" class="text-white">
         Thêm NXB Mới
       </v-btn>
     </div>
@@ -30,7 +30,7 @@
       :headers="headers"
       :items="publishers"
       :loading="isLoading"
-      class="elevation-4 rounded-lg"
+      class="elevation-2 rounded-lg border"
       :search="search"
     >
       <template v-slot:top>
@@ -42,14 +42,15 @@
           density="compact"
           class="pa-4"
           hide-details
+          color="black"
         ></v-text-field>
       </template>
 
       <template v-slot:item.actions="{ item }">
-        <v-icon size="small" class="mr-2 text-blue-500" @click="editItem(item)">
+        <v-icon size="small" class="mr-2 text-black" @click="editItem(item)">
           mdi-pencil
         </v-icon>
-        <v-icon size="small" class="text-red-500" @click="deleteItem(item)">
+        <v-icon size="small" class="text-grey-darken-1" @click="deleteItem(item)">
           mdi-delete
         </v-icon>
       </template>
@@ -57,7 +58,7 @@
 
     <v-dialog v-model="dialog" max-width="500px" persistent>
       <v-card>
-        <v-card-title class="bg-primary text-white pa-4">
+        <v-card-title class="bg-black text-white pa-4">
           <span class="text-h5">{{ formTitle }}</span>
         </v-card-title>
 
@@ -87,6 +88,7 @@
                   density="compact"
                   prepend-inner-icon="mdi-domain"
                   :rules="[(v) => !!v || 'Bắt buộc']"
+                  color="black"
                 ></v-text-field>
               </v-col>
 
@@ -104,6 +106,7 @@
                   :loading="loadingProvinces"
                   no-data-text="Đang tải hoặc không có dữ liệu"
                   clearable
+                  color="black"
                 ></v-autocomplete>
               </v-col>
             </v-row>
@@ -114,10 +117,11 @@
           <v-spacer></v-spacer>
           <v-btn color="grey-darken-1" variant="text" @click="close">Hủy</v-btn>
           <v-btn
-            color="primary"
+            color="black"
             variant="elevated"
             @click="save"
             :loading="isSaving"
+            class="text-white"
             >Lưu</v-btn
           >
         </v-card-actions>
@@ -131,7 +135,7 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="grey" variant="text" @click="closeDelete">Hủy</v-btn>
-          <v-btn color="red" variant="elevated" @click="deleteItemConfirm">Xóa</v-btn>
+          <v-btn color="black" variant="elevated" @click="deleteItemConfirm" class="text-white">Xóa</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -166,7 +170,7 @@ export default {
     editedItem: {
       _id: "",
       TenNXB: "",
-      DiaChi: "", // Lưu trực tiếp tên Tỉnh/Thành
+      DiaChi: "",
     },
     defaultItem: {
       _id: "",
@@ -175,7 +179,6 @@ export default {
     },
     itemToDelete: null,
 
-    // Dữ liệu Tỉnh/Thành
     provinces: [],
     loadingProvinces: false,
   }),
@@ -203,7 +206,6 @@ export default {
       }
     },
 
-    // Lấy danh sách 63 tỉnh thành
     async fetchProvinces() {
       this.loadingProvinces = true;
       try {

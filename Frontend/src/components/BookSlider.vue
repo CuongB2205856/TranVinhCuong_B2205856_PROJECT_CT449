@@ -6,70 +6,108 @@
             hide-delimiters 
             cycle 
             :interval="4000"
-            height="auto"
+            height="500" 
+            v-if="featuredBooks.length > 0"
         >
-            <v-carousel-item v-for="(book, index) in featuredBooks" :key="book.id" :value="index" cover>
-                <v-row no-gutters class="w-100">
+            <v-carousel-item v-for="(book, index) in featuredBooks" :key="book.id" :value="index">
+                <v-row no-gutters class="w-100 h-100">
+                    
                     <v-col cols="12" md="4" class="bg-grey-lighten-3">
-                        <div class="h-100 d-flex align-center justify-center">
-                            <v-img :src="book.image" class="rounded-0" contain
-                                style="max-height: 500px; max-width: 100%;" />
+                        <div class="h-100 d-flex align-center justify-center pa-4">
+                            <v-img 
+                                :src="book.image" 
+                                class="rounded-lg shadow-lg" 
+                                contain
+                                height="450"
+                                width="100%"
+                            />
                         </div>
                     </v-col>
 
                     <v-col cols="12" md="8" class="py-10 px-10" style="background-color: #111; color: white;">
                         <div class="d-flex flex-column justify-center align-start h-100">
-                            <h2 class="text-h4 font-weight-bold mb-4">{{ book.title }}</h2>
-                            <p class="text-subtitle-1 mb-2">Tác giả: {{ book.author }}</p>
-                            <p class="text-body-1">
-                                Một cuốn sách đặc sắc với nội dung hấp dẫn, mời bạn khám phá thêm!
+                            <h2 class="text-h4 font-weight-bold mb-4 line-clamp-2">
+                                {{ book.title }}
+                            </h2>
+                            <p class="text-subtitle-1 mb-2 text-grey-lighten-1">
+                                Tác giả: {{ book.author }}
                             </p>
+                            <p class="text-body-1 mb-6 line-clamp-3">
+                                Một cuốn sách đặc sắc với nội dung hấp dẫn đang chờ bạn khám phá. Hãy mượn ngay hôm nay để trải nghiệm tri thức mới!
+                            </p>
+                            <v-btn 
+                                :to="`/books/${book.id}`" 
+                                color="white" 
+                                variant="outlined" 
+                                size="large"
+                                class="text-capitalize font-weight-bold"
+                            >
+                                Xem chi tiết
+                            </v-btn>
                         </div>
                     </v-col>
                 </v-row>
             </v-carousel-item>
         </v-carousel>
+        
+        <div v-else class="d-flex justify-center align-center bg-grey-lighten-3" style="height: 500px;">
+             <v-progress-circular indeterminate color="black" size="64"></v-progress-circular>
+        </div>
     </div>
 </template>
 
 <script>
+import BookService from "@/services/Book.service";
+
 export default {
     name: "BookSlider",
     data() {
         return {
-            currentSlide: 0,
-            featuredBooks: [
-                {
-                    id: 1,
-                    title: "Dế Mèn Phiêu Lưu Ký",
-                    author: "Tô Hoài",
-                    image: "https://i1-giaitri.vnecdn.net/2025/01/06/De-Me-n-phie-u-lu-u-ky-1736177-4191-9546-1736178205.jpg?w=680&h=0&q=100&dpr=1&fit=crop&s=8rrYxKTShyJtxNeazthCEw",
-                },
-                {
-                    id: 2,
-                    title: "Harry Potter",
-                    author: "J.K. Rowling",
-                    image: "https://cdn2.fptshop.com.vn/unsafe/Uploads/images/tin-tuc/177166/Originals/poster-gioi-thieu-sach-3.jpg",
-                },
-                {
-                    id: 3,
-                    title: "Sherlock Holmes",
-                    author: "Arthur Conan Doyle",
-                    image: "https://marketplace.canva.com/EAD5DFBuM78/1/0/1003w/canva-c%E1%BA%B7p-%C4%91%C3%B4i-trong-c%E1%BB%8F-khoa-h%E1%BB%8Dc-vi%E1%BB%85n-t%C6%B0%E1%BB%9Fng-s%C3%A1ch-b%C3%ACa-eRK4o7m6a6c.jpg",
-                },
-            ],
+            featuredBooks: [],
         };
     },
+    methods: {
+        async fetchRandomBooks() {
+            try {
+                const books = await BookService.getAllBooks();
+                if (books && books.length > 0) {
+                    const shuffled = [...books].sort(() => 0.5 - Math.random());
+                    const selectedBooks = shuffled.slice(0, 3);
+
+                    this.featuredBooks = selectedBooks.map(book => ({
+                        id: book._id,
+                        title: book.TenSach,
+                        author: book.TacGia,
+                        image: book.anh_bia || 'https://placehold.co/600x900?text=No+Cover',
+                    }));
+                }
+            } catch (error) {
+                console.error("Lỗi khi tải sách slider:", error);
+            }
+        }
+    },
+    created() {
+        this.fetchRandomBooks();
+    }
 };
 </script>
 
 <style scoped>
-.v-carousel .v-carousel-item {
-    background-color: #fff;
+/* Class để cắt bớt chữ nếu tiêu đề quá dài */
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-align: left;
+}
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;    
+    text-align: left;
 }
 
-/* THAY ĐỔI: Override CSS của Vuetify để làm chậm hiệu ứng trượt */
 :deep(.v-window__container) {
-    transition: transform 2.5s ease-in-out; /* Tăng thời gian trượt lên 1.5s */
+    transition: transform 1.5s ease-in-out !important; 
 }
 </style>

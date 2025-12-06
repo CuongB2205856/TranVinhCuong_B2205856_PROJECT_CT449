@@ -50,7 +50,7 @@
             <template v-else>
                 <div class="d-flex gap-2">
                     <v-btn text to="/login" class="text-capitalize">Đăng nhập</v-btn>
-                    <v-btn color="white" class="text-black font-weight-bold text-capitalize" to="/register">
+                    <v-btn color="white" class="text-capitalize" to="/register">
                         Đăng ký
                     </v-btn>
                 </div>

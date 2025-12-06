@@ -1,8 +1,8 @@
 <template>
   <v-container class="py-10 max-w-7xl mx-auto">
-    <h2 class="text-3xl font-bold mb-6 text-red-darken-3">Quản Lý Mượn Trả</h2>
+    <h2 class="text-3xl font-bold mb-6 text-black">Quản Lý Mượn Trả</h2>
 
-    <v-card class="rounded-lg elevation-3">
+    <v-card class="rounded-lg elevation-2 border">
       <v-data-table
         :headers="headers"
         :items="borrowings"
@@ -17,6 +17,9 @@
             single-line
             hide-details
             class="pa-4"
+            variant="outlined"
+            density="compact"
+            color="black"
           ></v-text-field>
         </template>
 
@@ -24,6 +27,8 @@
           <v-chip
             :color="getStatusColor(item.TrangThai)"
             class="font-weight-bold text-white"
+            size="small"
+            variant="flat"
           >
             {{ getStatusText(item.TrangThai) }}
           </v-chip>
@@ -43,15 +48,17 @@
               size="small"
               @click="approve(item._id)"
               :loading="isProcessing === item._id"
+              variant="elevated"
             >
               <v-icon start>mdi-check</v-icon> Duyệt
             </v-btn>
 
             <v-btn
-              color="error"
+              color="red"
               size="small"
               @click="reject(item._id)"
               :loading="isProcessing === item._id"
+              variant="tonal"
             >
               <v-icon start>mdi-close</v-icon> Từ chối
             </v-btn>
@@ -59,17 +66,18 @@
 
           <v-btn
             v-if="item.TrangThai === 'dang_muon'"
-            color="primary"
+            color="black"
             size="small"
             @click="returnBook(item._id)"
             :loading="isProcessing === item._id"
+            class="text-white"
           >
             <v-icon start>mdi-book-arrow-left</v-icon> Trả Sách
           </v-btn>
 
           <span
             v-if="['da_tra', 'da_tu_choi'].includes(item.TrangThai)"
-            class="text-grey text-sm font-italic"
+            class="text-grey text-caption font-italic"
           >
             Hoàn tất
           </span>
@@ -80,7 +88,7 @@
 </template>
 
 <script>
-import api from "@/services/api.service";
+import api from "@/services/api.service"; //
 
 export default {
   name: "AdminBorrowing",
@@ -109,32 +117,21 @@ export default {
     },
     getStatusColor(status) {
       switch (status) {
-        case "cho_xac_nhan":
-          return "orange";
-        case "dang_muon":
-          return "blue";
-        case "da_tra":
-          return "green";
-        case "da_tu_choi":
-          return "red"; // Màu đỏ cho từ chối
-        default:
-          return "grey";
+        case "cho_xac_nhan": return "orange-darken-2";
+        case "dang_muon": return "blue-darken-2";
+        case "da_tra": return "green-darken-2";
+        case "da_tu_choi": return "grey-darken-3"; 
+        default: return "grey";
       }
     },
     getStatusText(status) {
       switch (status) {
-        case "cho_xac_nhan":
-          return "Chờ duyệt";
-        case "dang_muon":
-          return "Đang mượn";
-        case "da_tra":
-          return "Đã trả";
-        case "da_tu_choi":
-          return "Đã từ chối"; // Text hiển thị
-        case "da_huy":
-          return "Đã hủy"; // Text hiển thị
-        default:
-          return status;
+        case "cho_xac_nhan": return "Chờ duyệt";
+        case "dang_muon": return "Đang mượn";
+        case "da_tra": return "Đã trả";
+        case "da_tu_choi": return "Đã từ chối";
+        case "da_huy": return "Đã hủy";
+        default: return status;
       }
     },
     async fetchData() {

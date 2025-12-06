@@ -2,12 +2,11 @@
   <div class="admin-layout h-100">
     <AdminHeader @toggle-drawer="drawer = !drawer" />
 
-    <v-navigation-drawer v-model="drawer" color="white" elevation="2">
+    <v-navigation-drawer v-model="drawer" color="white" elevation="1">
       <div
-        class="d-flex flex-column align-center py-6 bg-red-darken-4 text-white"
+        class="d-flex flex-column align-center py-6 text-white"
       >
-        <v-icon size="64" class="mb-2">mdi-shield-account</v-icon>
-        <div class="text-subtitle-1 font-weight-bold">Quản Trị Viên</div>
+        <v-icon size="64" class="mb-2 text-black">mdi-shield-account</v-icon>
       </div>
 
       <v-divider></v-divider>
@@ -19,9 +18,9 @@
           :to="item.to"
           :prepend-icon="item.icon"
           :title="item.title"
-          color="red-darken-3"
+          color="black" 
           rounded="xl"
-          class="mb-1"
+          class="mb-1 font-weight-medium"
         ></v-list-item>
       </v-list>
     </v-navigation-drawer>
@@ -48,11 +47,9 @@ export default {
   data() {
     return {
       drawer: true,
-      userRole: "", // 1. Thêm biến lưu role
-      // items: [...] // Xóa mảng items tĩnh ở data cũ đi hoặc để rỗng
+      userRole: "",
     };
   },
-  // 2. Chuyển items thành computed để lọc theo role
   computed: {
     items() {
       const allItems = [
@@ -81,18 +78,16 @@ export default {
           title: "Quản Lý Nhân Sự",
           icon: "mdi-account-group",
           to: "/admin/staffs",
-          role: "Admin", // Đánh dấu mục này chỉ dành cho Admin
+          role: "Admin",
         },
       ];
 
-      // Lọc: Nếu item có yêu cầu role "Admin" mà user hiện tại không phải Admin thì ẩn đi
       return allItems.filter(
         (item) => !item.role || item.role === this.userRole
       );
     },
   },
   created() {
-    // 3. Lấy role từ sessionStorage khi component được tạo
     const userStr = sessionStorage.getItem("user");
     if (userStr) {
       const user = JSON.parse(userStr);
