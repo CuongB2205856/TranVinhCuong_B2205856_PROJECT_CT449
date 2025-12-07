@@ -33,6 +33,7 @@
             density="comfortable"
             color="black"
             :error-messages="errors"
+            style="text-transform: uppercase"
           />
         </Field>
 
@@ -87,7 +88,10 @@ export default {
       serverError: "",
       isLoading: false,
       schema: yup.object({
-        msnv: yup.string().required("Mã số NV không được để trống"),
+        msnv: yup
+          .string()
+          .transform((value) => (value ? value.toUpperCase() : value)) // [Thay đổi 1] Chuẩn hóa data
+          .required("Mã số NV không được để trống"),
         password: yup.string().required("Mật khẩu không được để trống"),
       }),
     };
@@ -97,8 +101,9 @@ export default {
       this.isLoading = true;
       this.serverError = "";
       try {
+        // [Thay đổi 2] Đảm bảo gửi lên server là chữ in hoa
         const { token, data } = await AuthService.loginStaff(
-          values.msnv,
+          values.msnv.toUpperCase(), 
           values.password
         );
         const user = data.user;

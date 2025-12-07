@@ -3,10 +3,25 @@ const mongoose = require("mongoose");
 
 const BorrowingSchema = new mongoose.Schema(
   {
-    MaDocGia: { type: String, ref: "Reader", required: true },
-    MaSach: { type: String, ref: "Book", required: true },
-    NgayMuon: { type: Date, required: true, default: Date.now },
-    NgayTra: { type: Date, default: null },
+    MaDocGia: {
+      type: String,
+      ref: "Reader",
+      required: true,
+    },
+    MaSach: {
+      type: String,
+      ref: "Book",
+      required: true,
+    },
+    NgayMuon: {
+      type: Date,
+      required: true,
+      default: Date.now,
+    },
+    NgayTra: {
+      type: Date,
+      default: null,
+    },
     TrangThai: {
       type: String,
       // [THÊM] 'da_huy' vào danh sách

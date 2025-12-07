@@ -2,21 +2,33 @@
 
 const Reader = require("../models/Reader.model");
 const jwt = require("jsonwebtoken");
-const config = require("../config"); // <--- IMPORT CONFIG
+const config = require("../config");
 
-// Sử dụng config.jwt thay vì process.env
 const signToken = (id) => {
   return jwt.sign({ id }, config.jwt.secret, {
-    expiresIn: config.jwt.expiresIn, // <--- SỬA Ở ĐÂY
+    expiresIn: config.jwt.expiresIn,
   });
 };
+
+// --- [THÊM MỚI] Hàm tạo mã độc giả tự động ---
+const generateReaderId = () => {
+  // Logic: DG + timestamp (lấy 6 số cuối) + 2 số ngẫu nhiên -> Đảm bảo duy nhất
+  const uniqueSuffix = Date.now().toString().slice(-6) + Math.floor(Math.random() * 99).toString().padStart(2, '0');
+  return `DG${uniqueSuffix}`;
+};
+// ---------------------------------------------
 
 class ReaderService {
   // [CREATE] Create new reader
   async createReader(data) {
     try {
-      // Mapping dữ liệu nếu cần thiết (ví dụ nếu frontend gửi keys tiếng Anh)
-      // Giả sử Controller gửi đúng keys khớp Model hoặc mapping tại đây
+      // --- [SỬA LỖI TẠI ĐÂY] ---
+      // Nếu dữ liệu chưa có _id, hãy tự động tạo
+      if (!data._id) {
+        data._id = generateReaderId();
+      }
+      // ------------------------
+
       return await Reader.create(data);
     } catch (error) {
       if (error.name === "ValidationError" || error.code === 11000) {
@@ -30,7 +42,6 @@ class ReaderService {
   async getAllReaders(name) {
     const filter = {};
     if (name) {
-      // ⚠️ Lưu ý: Query DB vẫn dùng trường 'Ten' của dữ liệu cũ
       filter.Ten = { $regex: new RegExp(name), $options: "i" };
     }
     return Reader.find(filter);
@@ -49,7 +60,6 @@ class ReaderService {
 
   // [UPDATE] Update reader
   async updateReader(id, updateData) {
-    // 1. Tìm bản ghi trước
     const reader = await Reader.findById(id);
 
     if (!reader) {
@@ -58,24 +68,18 @@ class ReaderService {
       throw error;
     }
 
-    // 2. Cập nhật từng trường dữ liệu
     Object.keys(updateData).forEach((key) => {
-      // Bỏ qua _id để tránh lỗi
       if (key !== '_id') {
         reader[key] = updateData[key];
       }
     });
 
-    // 3. Lưu lại -> Kích hoạt middleware pre('save') trong Model để hash password
     const updatedReader = await reader.save();
-
     return updatedReader;
   }
-  // --------------------------------
 
   // [AUTH] Login
   async checkLogin(phone, password) {
-    // 1. Tìm theo số điện thoại (DB field: DienThoai)
     const reader = await Reader.findOne({ DienThoai: phone }).select("+Password");
 
     if (!reader || !reader.Password) {
@@ -85,7 +89,6 @@ class ReaderService {
       );
     }
 
-    // 2. So sánh mật khẩu
     const isMatch = await reader.comparePassword(password);
 
     if (!isMatch) {
@@ -95,10 +98,7 @@ class ReaderService {
       );
     }
 
-    // 3. Tạo Token
     const token = signToken(reader._id);
-
-    // Ẩn mật khẩu
     reader.Password = undefined;
 
     return { user: reader, token };
